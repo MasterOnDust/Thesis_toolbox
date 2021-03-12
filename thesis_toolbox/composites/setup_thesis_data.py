@@ -1,5 +1,5 @@
 import xarray as xr
-from .create_composites import create_composite
+from .create_composites import create_composite, calculate_climatology
 import numpy as np
 
 def mslp_850hpa_wind_composite(mslp, u_wind_850, v_wind_850,strong_years, weak_years, 
@@ -10,11 +10,6 @@ def mslp_850hpa_wind_composite(mslp, u_wind_850, v_wind_850,strong_years, weak_y
     composite_ds['msl'].attrs['units'] = 'hPa' 
     composite_ds['u'] = create_composite(u_wind_850['u'], weak_years, strong_years)
     composite_ds['v'] = create_composite(v_wind_850['v'], weak_years, strong_years)
-    windspeed=np.sqrt(u_wind_850['u']**2 + v_wind_850['v']**2)
-    windspeed.attrs['varName']='hws'
-    windspeed.attrs['units'] = 'm/s'
-    windspeed.attrs['long_name'] = 'wind speed'
-    composite_ds['hws'] = create_composite(windspeed, weak_years, strong_years)
     composite_ds.attrs['title'] = "Composites of Mslp and windspeed at 850hPa"
     composite_ds.attrs['season'] = season
     composite_ds.attrs['source'] = 'ERA5 reanalysis'
@@ -44,3 +39,28 @@ def geopot_wind_composite(geopot, u_wind, v_vind, weak_years, strong_years, plev
     composite_ds.attrs['kind'] = kind
     
 
+def geopot_wind_climatology(geopot, u_wind, v_vind, plevel,start_year=None, end_year=None, season=''):
+    clim_ds=xr.Dataset()
+    clim_ds['Z'] = calculate_climatology(geopot['Z'], start_year=start_year, end_year=end_year)
+    clim_ds['u'] = calculate_climatology(u_wind['u'],  start_year=start_year, end_year=end_year)
+    clim_ds['v'] = calculate_climatology(v_wind['v'],  start_year=start_year, end_year=end_year)
+    windspeed=np.sqrt(u_wind['u']**2 + v_wind['v']**2)
+    windspeed.attrs['varName']='hws'
+    windspeed.attrs['units'] = 'm/s'
+    windspeed.attrs['long_name'] = 'wind speed'
+    clim_ds['hws'] = calculate_climatology(windspeed, start_year, end_year)
+    clim_ds.attrs['title'] = "Climatology of geopotential height and windspeed at " + str(plevel)
+    clim_ds.attrs['season'] = season
+    clim_ds.attrs['source'] = 'ERA5 reanalysis'
+    return clim_ds
+
+def mslp_850hPa_wind_composite(mslp, u_wind_850, v_wind_850, start_year=None,end_year=None, season=''):
+    clim_ds = xr.Dataset()
+    clim_ds['msl'] = calculate_climatology(mslp['msl'], start_year, end_year)
+    clim_ds['u'] = calculate_climatology(u_wind_850['u'],start_year, end_year)
+    clim_ds['v'] = calculate_climatology(v_wind_850['v'], start_year, end_year)
+    clim_ds.attrs['title'] = "Climatology of mean sea level pressure and windspeed at 850"
+    clim_ds.attrs['season'] = season
+    clim_ds.attrs['source'] = 'ERA5 reanalysis'
+    
+    return clim_ds
