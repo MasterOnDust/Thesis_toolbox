@@ -19,7 +19,7 @@ def mslp_wind_composite(mslp, u_wind, v_wind,strong_years, weak_years, plevel,
     return composite_ds
 
 
-def geopot_wind_composite(geopot, u_wind, v_vind, weak_years, strong_years, plevel, 
+def geopot_wind_composite(geopot, u_wind, v_wind, weak_years, strong_years, plevel, 
                          season='', location='', kind=''):
     """Create composite dataset of geopotential height, windspeed and windvectors"""
     
@@ -40,7 +40,7 @@ def geopot_wind_composite(geopot, u_wind, v_vind, weak_years, strong_years, plev
     return composite_ds
     
 
-def geopot_wind_climatology(geopot, u_wind, v_vind, plevel,start_year=None, end_year=None, season=''):
+def geopot_wind_climatology(geopot, u_wind, v_wind, plevel,start_year=None, end_year=None, season=''):
     clim_ds=xr.Dataset()
     clim_ds['Z'] = calculate_climatology(geopot['Z'], start_year=start_year, end_year=end_year)
     clim_ds['u'] = calculate_climatology(u_wind['u'],  start_year=start_year, end_year=end_year)
