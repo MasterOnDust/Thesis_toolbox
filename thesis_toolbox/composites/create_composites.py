@@ -31,7 +31,7 @@ def select_years_to_composite(timeseries,criterion='1-std'):
     
     USAGE:
     ======
-        weak_years, strong_years = select_years_to_composite(timeseires, criterion='1-std')
+        weak_years, strong_years = select_years_to_composite(timeseries, criterion='1-std')
     
     PARAMETERS:
     ==========
@@ -51,6 +51,10 @@ def select_years_to_composite(timeseries,criterion='1-std'):
     
     std = c*timeseries.std()
     mean = timeseries.mean()
+
+    if 'time' in timeseries.dims:
+        timeseries = timeseries.assign_coords(time=timeseries.time.dt.year)
+        timeseries = timeseries.rename(time='year')
     
     if isinstance(timeseries, xr.core.dataarray.DataArray):
         if 'year' in timeseries.dims:
@@ -61,9 +65,16 @@ def select_years_to_composite(timeseries,criterion='1-std'):
             weak_years = timeseries.where(timeseries < (mean-std), drop=True).time.dt.year.values
     elif isinstance(timeseries,pd.core.series.Series):
         strong_years = timeseries.where(timeseries > (mean+std)).dropna.index.year.values
-        weak_years = timesereis.where(timeseries < (mean-std)).dropna.index.year.values
+        weak_years = timeseries.where(timeseries < (mean-std)).dropna.index.year.values
     else:
         raise(ValueError('Invalid datatype provided'))
+
+    if len(weak_years) <= 3 and isinstance(timeseries, xr.core.dataarray.DataArray):
+        three_weakest = timeseries.argsort()[:3].values
+        weak_years = timeseries.isel(year=three_weakest).year.values
+    if len(strong_years) <= 3 and isinstance(timeseries, xr.core.dataarray.DataArray):
+        three_strongest = timeseries.argsort()[-3:].values
+        strong_years = timeseries.isel(year=three_strongest).year.values
     return weak_years,strong_years
 
     

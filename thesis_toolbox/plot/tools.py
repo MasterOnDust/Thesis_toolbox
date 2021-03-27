@@ -5,6 +5,7 @@ from matplotlib.ticker import ScalarFormatter,AutoMinorLocator
 import matplotlib
 from string import ascii_lowercase
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib as mpl
 
 def map_large_scale(ax):
     ax.set_extent([20,180,0,90], crs=ccrs.PlateCarree())

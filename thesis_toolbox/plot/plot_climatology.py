@@ -1,6 +1,6 @@
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-import .tools import map_large_scale
+from .tools import map_large_scale
 import numpy as np
 
 def plot_climatology_500hpa(ds, ax=None, label='', title='', add_colorbar=True):
