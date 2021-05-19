@@ -52,11 +52,12 @@ def select_years_to_composite(timeseries,criterion='1-std'):
     std = c*timeseries.std()
     mean = timeseries.mean()
 
-    if 'time' in timeseries.dims:
-        timeseries = timeseries.assign_coords(time=timeseries.time.dt.year)
-        timeseries = timeseries.rename(time='year')
+
     
     if isinstance(timeseries, xr.core.dataarray.DataArray):
+        if 'time' in timeseries.dims:
+            timeseries = timeseries.assign_coords(time=timeseries.time.dt.year)
+            timeseries = timeseries.rename(time='year')
         if 'year' in timeseries.dims:
             strong_years =timeseries.where(timeseries > (mean+std), drop=True).year.values
             weak_years=timeseries.where(timeseries < (mean-std), drop=True).year.values
@@ -64,8 +65,13 @@ def select_years_to_composite(timeseries,criterion='1-std'):
             strong_years = timeseries.where(timeseries > (mean+std), drop=True).time.dt.year.values
             weak_years = timeseries.where(timeseries < (mean-std), drop=True).time.dt.year.values
     elif isinstance(timeseries,pd.core.series.Series):
-        strong_years = timeseries.where(timeseries > (mean+std)).dropna.index.year.values
-        weak_years = timeseries.where(timeseries < (mean-std)).dropna.index.year.values
+        if isinstance(timeseries.index, pd.DatetimeIndex):
+            strong_years = timeseries.where(timeseries > (mean+std)).dropna().index.year.values
+            weak_years = timeseries.where(timeseries < (mean-std)).dropna().index.year.values
+        else:
+            strong_years = timeseries.where(timeseries > (mean+std)).dropna().index.values
+            weak_years = timeseries.where(timeseries < (mean-std)).dropna().index.values
+        
     else:
         raise(ValueError('Invalid datatype provided'))
 

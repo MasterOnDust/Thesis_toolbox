@@ -6,6 +6,7 @@ import matplotlib
 from string import ascii_lowercase
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
+import numpy as np
 
 def map_large_scale(ax):
     ax.set_extent([20,180,0,90], crs=ccrs.PlateCarree())
@@ -42,15 +43,17 @@ def add_letter(axes_array):
         ax.text( x=0.03,y=0.93, s='{})'.format(ascii_lowercase[i]), 
         fontsize=16, transform=ax.transAxes)
 
-def add_colorbar(im,cticks,label='', fmt='%d'):
+def add_colorbar(im,cticks=None,label='', fmt='%d'):
     """Adds Colorbar Nicely to figure"""
     ax = im.axes
     fig = ax.figure
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="3.5%", pad=0.05, axes_class=mpl.pyplot.Axes)
+    if isinstance(cticks, (np.ndarray,list, tuple)):
+        fig.colorbar(im,ax=ax,cax=cax,label=label,shrink=0.9, format=fmt, ticks=cticks)
+    else:
+        fig.colorbar(im,ax=ax,cax=cax,label=label,shrink=0.9, format=fmt)
 
-    fig.colorbar(im,ax=ax,cax=cax,label=label,shrink=0.9, format=fmt, ticks=cticks)
-        
 def latex_plot():
     plt.rcParams.update({'figure.autolayout': True})
     plt.rcParams['font.family'] = 'serif'
@@ -73,8 +76,16 @@ def latex_plot():
     plt.rcParams['xtick.labelsize'] = 14
     plt.rcParams['ytick.labelsize'] = 14
     
+    # -- Edit ticks
+    plt.rcParams['xtick.major.size']=5
+    plt.rcParams['xtick.minor.size']=3
+    plt.rcParams['xtick.major.width']=1.6  
+    plt.rcParams['xtick.minor.width']=1.2 
+    plt.rcParams['ytick.major.size']=5
+    plt.rcParams['ytick.minor.size']=3
+    plt.rcParams['ytick.major.width']=1.6  
+    plt.rcParams['ytick.minor.width']=1.2
     # --- Ignore warnings for generated plot
     plt.rcParams.update({'figure.max_open_warning': 0})
 
     plt.linewidth=17.0
-

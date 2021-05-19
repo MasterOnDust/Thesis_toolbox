@@ -44,18 +44,25 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
     if receptor_loc and isinstance(receptor_loc,list):
         ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
 
-def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None):
+def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None,  x_qk=0.93, y_qk=0.9,
+                            receptor_name=None,vector_scale=1, angles='xy'):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax)
     extent = ax.get_extent()
     ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
-    im = ds.hws.plot.contourf(transform=ccrs.PlateCarree(),
+    if receptor_name and isinstance(receptor_name,str):
+        Z = receptor_name+'_Z'
+        hws = receptor_name+'_hws'
+    else:
+        Z='Z'
+        hws = 'hws'
+    im = ds[hws].plot.contourf(transform=ccrs.PlateCarree(),
                                         cmap='bwr', add_colorbar=False, ax=ax, levels=np.linspace(-9,9, 16))
     ax.text( x=0.03,y=0.94, s=label, fontsize=16, transform=ax.transAxes)
     ax.set_xlabel('')
     ax.set_ylabel('')
-    CS = ds.Z.plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, add_labels=False, alpha=1, 
+    CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, add_labels=False, alpha=1, 
                            vmin=-6, vmax=6, levels=13)
     CS.collections[6].set_linewidth(3)
     ax.clabel(CS, fmt='%d', colors='black', fontsize=12, inline=1, zorder=1030)
@@ -63,12 +70,12 @@ def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None
         add_colorbar(im,im.levels, label='Composite difference 200hPa winds [m/s] \n  (strong years - weak years)')
     if receptor_loc and isinstance(receptor_loc,list):
         ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
-
+    return im
         
 def plot_mslp_850hpa_composite(ds, 
 oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master_thesis_UiO_workflow/downloads/ERA5_orography.nc' 
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
-                                receptor_name=None, vector_scale=1, angles='xy'):
+                                receptor_name=None, vector_scale=1, angles='xy',U=2, q_label=''):
     oro = xr.open_dataset(oro)
     oro = oro.sel(longitude=slice(69,105), latitude=slice(40,27)).isel(time=0)
     if receptor_name and isinstance(receptor_name,str):
@@ -86,10 +93,12 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
     im = ds[msl].plot.contourf(transform=ccrs.PlateCarree(),levels=16, vmin=-6, vmax=6,
                                                                 cmap='bwr', add_colorbar=False, ax=ax)
+    if q_label == '':
+        q_label = '2 m/s'
     Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
                    ds[v][::22,::22],transform=ccrs.PlateCarree(),color='saddlebrown', 
               units='xy', zorder=1002, minlength=2, pivot='middle', scale=vector_scale, angles = angles)
-    qk=ax.quiverkey(Q, x_qk,y_qk, U=2, label='2 m/s', labelpos='E', coordinates='axes', color='black')
+    qk=ax.quiverkey(Q, x_qk,y_qk, U=U, label=q_label, labelpos='E', coordinates='axes', color='black')
     qk.text.set_backgroundcolor('w')
     oro.z.where(oro.z > 33000,drop=True).plot.contourf(transform=ccrs.PlateCarree(),
                                                        levels=2, colors='lightgrey'
@@ -104,6 +113,7 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     ax.set_xlabel('')
     ax.set_ylabel('')
     ax.set_title(title)
+    return im
 
 def plot_which_years_composited(composite_ds,ax=None):
     if ax==None:

@@ -2,7 +2,6 @@ import xarray as xr
 import DUST
 from netCDF4 import num2date, date2num
 import numpy as np
-from IPython import embed
 
 def create_timeseries(path, lon0=None,lon1=None,lat0=None,lat1=None):
     ds = xr.open_dataset(path)
@@ -14,10 +13,14 @@ def create_timeseries(path, lon0=None,lon1=None,lat0=None,lat1=None):
     ems.attrs['long_name']=ds.Emission.attrs['long_name']
     ems = ems.to_dataset(name='Emission')
     ems.attrs=ds.attrs
-    ems.attrs['lon0']=lon0
-    ems.attrs['lat0']=lat0
-    ems.attrs['lon1']=lon1
-    ems.attrs['lat1']=lat1
+    if lon0:
+        ems.attrs['lon0']=lon0
+    if lat1:
+        ems.attrs['lat0']=lat0
+    if lon1:
+        ems.attrs['lon1']=lon1
+    if lat1:
+        ems.attrs['lat1']=lat1
     ems.time.attrs=ds.time.attrs
     return ems
 
