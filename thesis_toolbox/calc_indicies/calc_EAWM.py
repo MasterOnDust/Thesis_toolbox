@@ -32,3 +32,11 @@ def calc_MO_index(mslp_data):
     
     return mo
 
+def calc_SHI(mslp_data):
+    mslp_SHI = mslp_data.msl.sel(longitude=slice(80,120),latitude=slice(65,40)).mean(dim=['longitude','latitude'])
+    SHI = mslp_SHI.to_dataset(name='SHI')
+    SHI.attrs['varName'] = 'SHI'
+    SHI.attrs['title'] = 'Siberian High index'
+    SHI.attrs['reference'] = "Wang et al 2010, Adv. Atmos. Sci., 27, 855–870."
+    SHI.SHI.attrs['long_name'] = "Siberian High index"
+    return SHI
