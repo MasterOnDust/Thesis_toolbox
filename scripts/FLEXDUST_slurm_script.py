@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 import os
 import argparse as ap
 import pandas as pd
@@ -25,7 +25,7 @@ def submit_to_slurm(output_dir, flexdust_src, wall_time='04:00:00', memory_limit
         js.writelines('cd {}\n'.format(output_dir))
         js.writelines("time FLEXDUST\n")
         js.writelines("exit 0")
-    os.system('sbatch {}run_FLEXDUST.sh'.format(output_dir))
+#    os.system('sbatch {}run_FLEXDUST.sh'.format(output_dir))
 def create_command_file(output_dir, settings):
     with open(output_dir + 'COMMAND_FLEXDUST','w') as cf:
         cf.writelines('&COMMAND_FLEXDUST\n')
@@ -38,10 +38,9 @@ def create_command_file(output_dir, settings):
 
 if __name__ == '__main__':
     parser = ap.ArgumentParser(description='Creates FLEXDUST COMMAND file and submit to job queue')
-    parser.add_argument('--month', '-m', help='Start month of FLEXDUST simulation', default=3 , type=int)
-    parser.add_argument('--day', '-d', help='Start day of FLEXDUST simulation', type=int, default=1)
-    parser.add_argument('--years', '-ny',nargs = '+', help='Number concurent years to simulate, start from sdate',
-                            default=2019, type=int)
+    parser.add_argument('month',  help='Start month of FLEXDUST simulation',  type=int)
+    parser.add_argument('day',  help='Start day of FLEXDUST simulation', type=int)
+    parser.add_argument('years', nargs = '+', help='Number concurent years to simulate, start from sdate',type=int)
     parser.add_argument('--ndays', '-nd', help='Number of days to simulate starting from sdate', default=91)
     parser.add_argument('--wall_time', '-wt', help='Time of each job submission', default='04:00:00')
     parser.add_argument('--memory_limit', '-ml', help='memory_limit of slurm job', default='24GB')
