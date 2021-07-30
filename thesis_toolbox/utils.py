@@ -15,33 +15,35 @@ def get_locations_CLP():
     df.loc['LUOCHUAN',:] = (109.424,35.710)
     return df
 
-# def extract_source_region(region):
-#     source_regions:
-#     taklamakan:
-#         lon0: 75
-#         lon1: 90
-#         lat0: 36
-#         lat1: 42
-#     north_west:
-#         lon0: 100
-#         lon1: 110
-#         lat0: 37
-#         lat1: 42
-#     mongolia:
-#         lon0: 95
-#         lon1: 110
-#         lat0: 43
-#         lat1: 50
-#     jungger_basin:
-#         lon0: 80
-#         lon1: 90
-#         lat0: 43
-#         lat1: 47
-#     qaidam_basin:
-#         lon0: 90
-#         lon1: 100
-#         lat0: 35
-#         lat1: 40
+def extract_source_region(region):
+    """
+    DESCRIPTION:
+    ============
+        Give the lon/lat of the rectangle defining each source
+
+    ARGUMENTS:
+    ==========
+        region, currently defined regions are: taklamakan, north_west, mongolia, jungger_basin
+                and quaidam_basin
+
+    RETURN:
+    ======
+        lon0,lon1,lat0,lat1
+
+    """
+
+    if region == 'taklamakan':
+        return 75, 90, 36 ,42
+    elif region == 'north_west':
+        return 100, 110, 37, 42
+    elif region == 'mongolia':
+        return 95, 110, 43, 50
+    elif region == 'jungger_basin':
+        return 80, 90, 43, 47
+    elif region == 'quaidam_basin':
+        return 90, 100, 35, 40
+    else:
+        raise(ValueError(f'{region} is not defined'))
 
 def read_receptor_composite(locs,path, folder,size,season,region='total',kind='total_deposition',std='05-std'):
     """Read circulation composite data files based on the Master thesis workflow structure"""
@@ -70,7 +72,7 @@ def read_depostion_datasets(path,locs, kind,psize, frac=1):
     ds.attrs['locations'] = list(locs)
     return ds
 
-def source_contrib_composite_difference(path, locs,kind, psize,frac=1, norm=True):
+def source_contrib_composite_difference(path, locs,kind, psize,frac=1, norm=True, c=4):
     """Read in depostion time series and source contribution data """
     ds=xr.Dataset()
     if psize =='2micron':
@@ -82,7 +84,7 @@ def source_contrib_composite_difference(path, locs,kind, psize,frac=1, norm=True
     for loc in locs:
         ts = xr.open_dataset(glob.glob(path+'results/model_results/time_series/{}/{}.{}.total.{}.*.nc'.format(kind,kind,loc,psize))[0])
         ts[kind] = detrend_timeseries(ts[kind])
-        weak_years,strong_years = select_years_to_composite(ts[kind])
+        weak_years,strong_years = select_years_to_composite(ts[kind],c)
         ds_path = glob.glob(path+'results/model_results/{}/{}.{}.{}.*.nc'.format(kind,kind,loc,psize))[0]
         weak_depo_year = xr.open_dataset(ds_path).sel(year=weak_years).mean(dim='year')
 

@@ -1,9 +1,13 @@
-from fpcluster.adaptive_kmeans import Adaptive_KMeans
+
 import numpy as np
 from fpcluster.read_trajectories import load_trajectories, read_trajectories
+
 import pandas as pd
 from thesis_toolbox.utils import get_trajectory_paths, get_path_source_contribution
 import xarray as xr
+import cartopy
+import fpcluster as fc
+
 
 def get_dust_trajectories(path0,years,kind,loc,psize,threshold=1e-3, 
                           std_treshold=None, use_dask=True,chunks={'time':1}):
@@ -38,7 +42,7 @@ def get_dust_trajectories(path0,years,kind,loc,psize,threshold=1e-3,
             ds = xr.open_dataset(path,chunks=chunks)
         else: 
             ds = xr.open_dataset(path)
-        ds = ds.drydep.sum(dim=['btime','lon','lat'])
+        ds = ds[ds.varName].sum(dim=['btime','lon','lat'])
         ddep.append(ds.values)
         time_stamps.append(ds.time.values)
     ddep = np.concatenate(ddep)
