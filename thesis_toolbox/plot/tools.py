@@ -37,11 +37,11 @@ class OOMFormatter(matplotlib.ticker.ScalarFormatter):
         if self._useMathText:
             self.format = '$%s$' % self.format
             
-def add_letter(axes_array):
+def add_letter(axes_array, x=0.03,y=0.93, fontsize=16,**text_kwargs):
     """Add letter each axes object"""
     for i,ax in enumerate(axes_array.ravel()):
-        ax.text( x=0.03,y=0.93, s='{})'.format(ascii_lowercase[i]), 
-        fontsize=16, transform=ax.transAxes)
+        ax.text( x=x,y=y, s='{})'.format(ascii_lowercase[i]), 
+        fontsize=fontsize, transform=ax.transAxes, **text_kwargs)
 
 def add_colorbar(im,cticks=None,label='', fmt='%d'):
     """Adds Colorbar Nicely to figure"""

@@ -11,59 +11,63 @@ from matplotlib.colors import LogNorm
 import numpy as np
 
 
-def depositon_facet_plot( total_depo,wet_depo,dry_depo,locs=None,ylabel_bar_plot=None,**mesh_kwargs):
-    if locs == None:
-        locs = get_locations_CLP()
+def depositon_facet_plot( total_depo,wet_depo,dry_depo,ylabel_bar_plot=None,ylim=None,
+                        figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, **mesh_kwargs):
+    locations_df = get_locations_CLP()
     
-    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=(13,15), subplot_kw={'projection':ccrs.PlateCarree()})
+    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
     
-    plt.subplots_adjust(hspace=0.0)
+    plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
-        mpl_base_map_plot_xr(total_depo[dvar], colorbar=True,ax=axes[i], extend='max', **mesh_kwargs)
-        axes[i].set_title(total_depo.locations[i])
-        axes[i].scatter(locs.loc[total_depo.locations[i],:][0],
-                        locs.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+        mpl_base_map_plot_xr(total_depo[dvar], ax=axes[i], extend='max', **mesh_kwargs)
+        axes[i].set_title(total_depo.locations[i], fontsize=fontsize_title)
+        axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
+                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+        if i in (1,3,5):
+            axes[i].yaxis.set_ticklabels([])
     ax1 = fig.add_subplot(4,2,8)
     ax[3,1] = ax1
-    add_letter(ax)
-    deposition_bar_plot(wet_depo,dry_depo, locs=locs.index, y_axis_label=ylabel_bar_plot,ax=ax1)
+    add_letter(ax,y=0.87)
+    deposition_bar_plot(wet_depo,dry_depo, y_axis_label=ylabel_bar_plot,ax=ax1,ylim=ylim)
 
 
-def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,vmax,
-                                locs=None,lower_bound=-5e-8,upper_bound=5e-8,**mesh_kwargs):
-    if isinstance(locs,np.ndarray):
-        locs=locs
-    else:
-        locs = get_locations_CLP()
+def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,vmax,figsize=(8.3,11.7),
+                                lower_bound=-5e-8,upper_bound=5e-8,fontsize_title=14,hspace=0.5,wspace=None,
+                                **mesh_kwargs):
+    locations_df = get_locations_CLP()
+
     
-    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=(13,15), subplot_kw={'projection':ccrs.PlateCarree()})
+    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
     
-    plt.subplots_adjust(hspace=0.0)
+    plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
         plot_log_anomaly(total_depo[dvar], lin_tresh,vmin,vmax,ax=axes[i], cmap='bwr', lower_bound=lower_bound,upper_bound=upper_bound, **mesh_kwargs)
-        axes[i].set_title(total_depo.locations[i])
-        axes[i].scatter(locs.loc[total_depo.locations[i],:][0],
-                        locs.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+        axes[i].set_title(total_depo.locations[i], fontsize=fontsize_title)
+        axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
+                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+        if i in (1,3,5):
+            axes[i].yaxis.set_ticklabels([])
     ax1 = fig.add_subplot(4,2,8)
     ax[3,1] = ax1
-    add_letter(ax)
-    deposition_bar_plot(wet_depo,dry_depo, locs=locs.index, ax=ax1,
-    y_axis_label='Deposition rate difference [g\m^2] \n (Strong years - weak yeak)')
+    add_letter(ax,y=0.87)
+    deposition_bar_plot(wet_depo,dry_depo,  ax=ax1,
+    y_axis_label='Deposition rate [$\mathrm{g/m}^2$] \n (Strong years - weak yeak)')
 
-def deposition_bar_plot(wet_dep,dry_dep,locs,ax=None, y_axis_label=None):
+def deposition_bar_plot(wet_dep,dry_dep,ax=None, y_axis_label=None, ylim=None):
     if ax == None:
         ax = plt.gca()
     ax.yaxis.tick_right()
     wet_dep = wet_dep.sum(dim=['lon','lat'])
     dry_dep = dry_dep.sum(dim=['lon','lat'])
+    locs = wet_dep.locations
     if y_axis_label:
         ax.set_ylabel(y_axis_label)
     else:
-        ax.set_ylabel('Average Depostion [g/m^2]')
+        ax.set_ylabel('Average Depostion [$\mathrm{g/m}^2$]')
     ax.bar(range(1,len(locs)+1),[wet_dep[dvar].values for dvar in wet_dep.data_vars],
            color='lightseagreen', label='Wet Depositon' )
     ax.bar(range(1,len(locs)+1),[dry_dep[dvar].values for dvar in dry_dep.data_vars],
@@ -71,4 +75,6 @@ def deposition_bar_plot(wet_dep,dry_dep,locs,ax=None, y_axis_label=None):
     ax.set_xticks(range(1,len(locs)+1))
     ax.set_xticklabels(locs,rotation = 90)
     ax.yaxis.set_label_position("right")
-    ax.legend()      
+    if ylim:
+        ax.set_ylim(ylim)
+    ax.legend(fontsize='small')      
