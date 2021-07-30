@@ -21,39 +21,67 @@ def detrend_timeseries(timeseries):
     detrended = detrend(timeseries)
 
     return detrended
- 
-def select_years_to_composite(timeseries,criterion='1-std'):
+
+def select_years_according_to_rank(timeseries, c):
     """
     DESCRIPTION:
-    ===========
-        Chooses which years to be included in the composites, the selection criterion can 
-        either be 2, 1 or 0.5 standard devivation around the mean.
-    
-    USAGE:
-    ======
-        weak_years, strong_years = select_years_to_composite(timeseries, criterion='1-std')
-    
-    PARAMETERS:
+    ============
+        Chooses which years to be included in the composite based on rank. 
+
+    ARGUMENTS:
     ==========
-        timeseries : either xarray DataArray or pandas.series
-        criterion : valid values '0.5-std', '1-std' and '2-std'
-        
+        timeseries either a xarray.dataarray.DataArray or pandas.core.series.Series
+        c how many to include in the composite, eg. c=3 would take the 3 strongest and 3 weakest years. 
+
+    RETURN:
+
+        weak_years, strong_years
+
     """
+
     
-    if criterion == '05-std':
-        c = 0.5
-    elif criterion == '1-std':
-        c = 1
-    elif criterion == '2-std':
-        c = 2
+    if isinstance(timeseries, xr.core.dataarray.DataArray):
+        if 'time' in timeseries.dims:
+            tdim = 'time'
+        elif 'year' in timeseries.dims:
+            tdim='year'
+        elif 'T' in timeseries.attrs.keys():
+            tdim = timeseries.attrs['T']
+        else:
+            raise(ValueError('''Time dimmension not found, make sure that time dimension is either 
+                                called time or year or that dataarray has an attribute called T'''))
+        n_weakest = timeseries.argsort()[:c].values
+        weak_years = timeseries.isel({tdim:n_weakest})[tdim]
+        
+        n_strongest = timeseries.argsort()[-c:].values
+        strong_years = timeseries.isel({tdim:n_strongest})[tdim]
+
+        if isinstance(strong_years.values[0], np.datetime64):
+            strong_years = strong_years.dt.year.values
+            weak_years = weak_years.dt.year.values
+        else:
+            strong_years = strong_years.values
+            weak_years = weak_years.values
+
+
+    elif isinstance(timeseries, pd.core.series.Series):
+        if not isinstance(timeseries.index, pd.DatetimeIndex):
+            sorted_indices = timeseries.values.argsort()
+            weak_years = timeseries.iloc[sorted_indices[:c]].index.values
+            sorted_indices = timeseries.values.argsort()
+            strong_years = timeseries.iloc[sorted_indices[sorted_indices[-c:]]].index.values 
+        else:
+            raise(NotImplementedError('Not implemented yet, but will be if i find a use'))
     else:
-        raise(ValueError('Invalid criterion provided: {}'.format(criterion)))
-    
+        raise(ValueError(f'{type(timeseries)} is not supported, provided either a xarray DataArray or pandas series'))
+
+    return weak_years, strong_years
+
+def select_years_according_to_std(timeseries,c=1):
     std = c*timeseries.std()
     mean = timeseries.mean()
 
-
-    
+        
     if isinstance(timeseries, xr.core.dataarray.DataArray):
         if 'time' in timeseries.dims:
             timeseries = timeseries.assign_coords(time=timeseries.time.dt.year)
@@ -73,15 +101,40 @@ def select_years_to_composite(timeseries,criterion='1-std'):
             weak_years = timeseries.where(timeseries < (mean-std)).dropna().index.values
         
     else:
-        raise(ValueError('Invalid datatype provided'))
+        raise(ValueError(f'Invalid datatype provided {type(timeseries)}'))
 
-    if len(weak_years) <= 3 and isinstance(timeseries, xr.core.dataarray.DataArray):
-        three_weakest = timeseries.argsort()[:3].values
-        weak_years = timeseries.isel(year=three_weakest).year.values
-    if len(strong_years) <= 3 and isinstance(timeseries, xr.core.dataarray.DataArray):
-        three_strongest = timeseries.argsort()[-3:].values
-        strong_years = timeseries.isel(year=three_strongest).year.values
+
+
     return weak_years,strong_years
+
+def select_years_to_composite(timeseries,c,criterion='rank'):
+    """
+    DESCRIPTION:
+    ===========
+        Chooses which years to be included in the composites, the selection criterion can 
+        either be 2, 1 or 0.5 standard devivation around the mean.
+    
+    USAGE:
+    ======
+        weak_years, strong_years = select_years_to_composite(timeseries, criterion='1-std')
+    
+    PARAMETERS:
+    ==========
+        timeseries : either xarray DataArray or pandas.series
+        criterion : valid values '0.5-std', '1-std' and '2-std'
+        
+    """
+    if criterion == 'rank':
+        weak_years, strong_years = select_years_according_to_rank(timeseries,c)
+    elif criterion == 'std':
+        weak_years, strong_years = select_years_according_to_std(timeseries,c)
+    else:
+        raise(ValueError('Invalid criterion provided: {}'.format(criterion)))
+    
+    return weak_years, strong_years
+
+
+
 
     
 def create_composite(da,weak_years,strong_years):

@@ -25,9 +25,9 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
     im = ds[hws].plot.contourf(transform=ccrs.PlateCarree(),  levels= np.linspace(-7.5,7.5,16),
                                                     cmap='bwr', add_colorbar=False, ax=ax)
     CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, 
-                       add_labels=False, alpha=1,  vmin=-6, vmax=6, levels=13)
+                       add_labels=False, alpha=1,  vmin=-6, vmax=6, levels=7)
 #     print(CS.levels)
-    CS.collections[6].set_linewidth(3)
+    CS.collections[3].set_linewidth(2)
     ax.text( x=0.03,y=0.94, s=label, fontsize=16, transform=ax.transAxes)
 
     Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
@@ -45,7 +45,7 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
         ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
 
 def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None,  x_qk=0.93, y_qk=0.9,
-                            receptor_name=None,vector_scale=1, angles='xy'):
+                            receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax)
@@ -63,7 +63,7 @@ def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None
     ax.set_xlabel('')
     ax.set_ylabel('')
     CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, add_labels=False, alpha=1, 
-                           vmin=-6, vmax=6, levels=13)
+                           vmin=vmin, vmax=vmax, levels=13)
     CS.collections[6].set_linewidth(3)
     ax.clabel(CS, fmt='%d', colors='black', fontsize=12, inline=1, zorder=1030)
     if colorbar:
@@ -75,7 +75,8 @@ def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None
 def plot_mslp_850hpa_composite(ds, 
 oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master_thesis_UiO_workflow/downloads/ERA5_orography.nc' 
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
-                                receptor_name=None, vector_scale=1, angles='xy',U=2, q_label=''):
+                                receptor_name=None, vector_scale=1, angles='xy',U=2, q_label='',
+                                vmin=-6, vmax=6):
     oro = xr.open_dataset(oro)
     oro = oro.sel(longitude=slice(69,105), latitude=slice(40,27)).isel(time=0)
     if receptor_name and isinstance(receptor_name,str):
@@ -91,10 +92,10 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     map_large_scale(ax)
     extent = ax.get_extent()
     ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
-    im = ds[msl].plot.contourf(transform=ccrs.PlateCarree(),levels=16, vmin=-6, vmax=6,
+    im = ds[msl].plot.contourf(transform=ccrs.PlateCarree(),levels=16, vmin=vmin, vmax=vmax,
                                                                 cmap='bwr', add_colorbar=False, ax=ax)
     if q_label == '':
-        q_label = '2 m/s'
+        q_label = f'{U} m/s'
     Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
                    ds[v][::22,::22],transform=ccrs.PlateCarree(),color='saddlebrown', 
               units='xy', zorder=1002, minlength=2, pivot='middle', scale=vector_scale, angles = angles)
@@ -106,31 +107,38 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     if colorbar:
         add_colorbar(im,im.levels, label='Mean Sea Level Pressure \n  (strong years - weak years)')
     if receptor_loc and isinstance(receptor_loc,list):
-        ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
+        ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*', zorder=2000)
 
-    ax.text( x=0.03,y=0.94, s=label, fontsize=16, transform=ax.transAxes)
+    ax.text( x=0.03,y=0.94, s=label, fontsize=14, transform=ax.transAxes)
     
     ax.set_xlabel('')
     ax.set_ylabel('')
     ax.set_title(title)
     return im
 
-def plot_which_years_composited(composite_ds,ax=None):
+def plot_which_years_composited(composite_ds,ax=None, xlabelsize=8,locs=None,**scatter_kwargs):
     if ax==None:
         ax = plt.gca()
     ax.cla()
     ax.set_xticks(range(1999,2020))
     ax.set_xlim(1998,2020)
-    ax.set_xticklabels(ax.get_xticks(), rotation = 45)
+    ax.set_xticklabels(ax.get_xticks(), rotation = 45,)
     ax.yaxis.tick_right()
-    ax.set_yticklabels(composite_ds.attrs['locations'])
-    ax.set_yticks(range(1,9))
+    
+    ax.set_yticks(range(1,8))
     variable = list(composite_ds.data_vars)[0].split('_')[-1]
     n = 1
-    for loc in composite_ds.attrs['locations']:
-        ax.scatter((composite_ds[loc+'_'+variable].strong_years),[n for i in range(len(composite_ds[loc+'_'+variable].strong_years))],color='deeppink')
-        ax.scatter((composite_ds[loc+'_'+variable].weak_years),[n for i in range(len(composite_ds[loc+'_'+variable].weak_years))], color='slateblue')
+    if locs==None:
+        locs = composite_ds.attrs['locations']
+
+    for loc in locs:
+        ax.scatter((composite_ds[loc+'_'+variable].strong_years),
+                [n for i in range(len(composite_ds[loc+'_'+variable].strong_years))],color='deeppink', **scatter_kwargs)
+        ax.scatter((composite_ds[loc+'_'+variable].weak_years),
+                [n for i in range(len(composite_ds[loc+'_'+variable].weak_years))], color='slateblue', **scatter_kwargs)
         
         n=n+1
+    ax.set_yticklabels(locs)
     ax.set_ylim(0,9)
+    ax.tick_params(axis='x', which='major', labelsize=xlabelsize)
     ax.legend(['Strong years','Weak Years'],mode='expand', ncol=2, frameon=False)

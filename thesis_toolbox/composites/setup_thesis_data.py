@@ -3,7 +3,7 @@ from .create_composites import create_composite, calculate_climatology
 import numpy as np
 
 def mslp_wind_composite(mslp, u_wind, v_wind, weak_years, strong_years, plevel,
-                               season='', location='', kind=''):
+                               season='', location='', kind='', lon0=None, lat0=None,lon1=None,lat1=None):
     composite_ds = xr.Dataset()
     composite_ds['msl'] = create_composite(mslp['msl'], weak_years,strong_years)
     composite_ds = composite_ds.assign(msl=composite_ds.msl/100)
@@ -20,7 +20,7 @@ def mslp_wind_composite(mslp, u_wind, v_wind, weak_years, strong_years, plevel,
 
 
 def geopot_wind_composite(geopot, u_wind, v_wind, weak_years, strong_years, plevel, 
-                         season='', location='', kind=''):
+                         season='', location='', kind='',lon0=None, lat0=None,lon1=None,lat1=None):
     """Create composite dataset of geopotential height, windspeed and windvectors"""
     
     composite_ds = xr.Dataset()
