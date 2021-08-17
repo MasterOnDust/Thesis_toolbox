@@ -138,6 +138,9 @@ def plot_which_years_composited(composite_ds,ax=None, xlabelsize=8,locs=None,**s
                 [n for i in range(len(composite_ds[loc+'_'+variable].weak_years))], color='slateblue', **scatter_kwargs)
         
         n=n+1
+    if locs[4] == 'BADOE':
+        locs[4] = 'BAODE'
+
     ax.set_yticklabels(locs)
     ax.set_ylim(0,9)
     ax.tick_params(axis='x', which='major', labelsize=xlabelsize)

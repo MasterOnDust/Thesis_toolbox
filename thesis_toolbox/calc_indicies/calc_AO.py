@@ -9,7 +9,7 @@ def calc_AO_EOF(geopot_data_ano):
         Input takes 1000hPa geopotential height anomalies.
         
         Input:
-            mslp_anaomalies: xarray.dataset containing mean sea level pressure anomailies. 
+            mslp_anaomalies: xarray.dataset containing geopotential height anomailies. 
 
         Returns: 
             out_data: the scaled 1th principal component time series 

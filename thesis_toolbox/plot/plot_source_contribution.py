@@ -22,7 +22,11 @@ def depositon_facet_plot( total_depo,wet_depo,dry_depo,ylabel_bar_plot=None,ylim
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
         mpl_base_map_plot_xr(total_depo[dvar], ax=axes[i], extend='max', **mesh_kwargs)
-        axes[i].set_title(total_depo.locations[i], fontsize=fontsize_title)
+        if total_depo.locations[i] == 'BADOE':
+            loc_name = 'BAODE'
+        else:
+            loc_name = total_depo.locations[i]
+        axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
         if i in (1,3,5):
@@ -46,7 +50,11 @@ def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,v
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
         plot_log_anomaly(total_depo[dvar], lin_tresh,vmin,vmax,ax=axes[i], cmap='bwr', lower_bound=lower_bound,upper_bound=upper_bound, **mesh_kwargs)
-        axes[i].set_title(total_depo.locations[i], fontsize=fontsize_title)
+        if total_depo.locations[i] == 'BADOE':
+            loc_name = 'BAODE'
+        else:
+            loc_name = total_depo.locations[i]
+        axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
         if i in (1,3,5):
@@ -64,6 +72,9 @@ def deposition_bar_plot(wet_dep,dry_dep,ax=None, y_axis_label=None, ylim=None):
     wet_dep = wet_dep.sum(dim=['lon','lat'])
     dry_dep = dry_dep.sum(dim=['lon','lat'])
     locs = wet_dep.locations
+    if locs[4] =='BADOE':
+        locs[4] = 'BAODE'
+
     if y_axis_label:
         ax.set_ylabel(y_axis_label)
     else:
