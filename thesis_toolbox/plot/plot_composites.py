@@ -6,7 +6,7 @@ import xarray as xr
 
 
 def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0.9, receptor_loc=None
-                            ,receptor_name=None,vector_scale=1, angles='xy'):
+                            ,receptor_name=None,vector_scale=1, angles='xy',hatches='xx', hatch_color='gray'):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax)
@@ -26,9 +26,13 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
                                                     cmap='bwr', add_colorbar=False, ax=ax)
     CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, 
                        add_labels=False, alpha=1,  vmin=-6, vmax=6, levels=7)
-#     print(CS.levels)
     CS.collections[3].set_linewidth(2)
     ax.text( x=0.03,y=0.94, s=label, fontsize=16, transform=ax.transAxes)
+    cs=ds[Z+'_significance_map_005'].where(ds[hws+'_significance_map_005'] !=0, drop=True).plot.contourf(ax=ax,colors='none',hatches=[hatches, None],
+                 add_colorbar=False)
+    for i, collection in enumerate(cs.collections):
+        collection.set_edgecolor(hatch_color)
+        collection.set_linewidth(0.)
 
     Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
                    ds[v][::22,::22],transform=ccrs.PlateCarree(),color='saddlebrown', 
@@ -45,7 +49,7 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
         ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
 
 def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None,  x_qk=0.93, y_qk=0.9,
-                            receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6):
+                            receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6,hatches='xx', hatch_color='gray'):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax)
@@ -65,7 +69,13 @@ def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None
     CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, add_labels=False, alpha=1, 
                            vmin=vmin, vmax=vmax, levels=13)
     CS.collections[6].set_linewidth(3)
+
     ax.clabel(CS, fmt='%d', colors='black', fontsize=12, inline=1, zorder=1030)
+    cs=ds[Z+'_significance_map_005'].where(ds[Z+'_significance_map_005'] !=0, drop=True).plot.contourf(ax=ax,colors='none',hatches=[hatches, None],
+                 add_colorbar=False)
+    for i, collection in enumerate(cs.collections):
+        collection.set_edgecolor(hatch_color)
+        collection.set_linewidth(0.)
     if colorbar:
         add_colorbar(im,im.levels, label='Composite difference 200hPa winds [m/s] \n  (strong years - weak years)')
     if receptor_loc and isinstance(receptor_loc,list):
@@ -76,7 +86,7 @@ def plot_mslp_850hpa_composite(ds,
 oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master_thesis_UiO_workflow/downloads/ERA5_orography.nc' 
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
                                 receptor_name=None, vector_scale=1, angles='xy',U=2, q_label='',
-                                vmin=-6, vmax=6):
+                                vmin=-6, vmax=6, significance_mask=True,hatches='xx', hatch_color='gray'):
     oro = xr.open_dataset(oro)
     oro = oro.sel(longitude=slice(69,105), latitude=slice(40,27)).isel(time=0)
     if receptor_name and isinstance(receptor_name,str):
@@ -93,7 +103,14 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     extent = ax.get_extent()
     ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
     im = ds[msl].plot.contourf(transform=ccrs.PlateCarree(),levels=16, vmin=vmin, vmax=vmax,
-                                                                cmap='bwr', add_colorbar=False, ax=ax)
+                                                               cmap='bwr', add_colorbar=False, ax=ax)
+    if significance_mask:
+        cs=ds[msl+'_significance_map_005'].where(ds[msl+'_significance_map_005'] !=0, drop=True).plot.contourf(ax=ax,colors='none',hatches=[hatches, None],
+                    add_colorbar=False)
+        for i, collection in enumerate(cs.collections):
+            collection.set_edgecolor(hatch_color)
+            collection.set_linewidth(0.)
+    # cs.collections[0].set_edgecolor('gainsboro')
     if q_label == '':
         q_label = f'{U} m/s'
     Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 

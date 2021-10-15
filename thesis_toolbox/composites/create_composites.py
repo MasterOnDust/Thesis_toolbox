@@ -10,7 +10,7 @@ import numpy as np
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from statsmodels.tsa.tsatools import detrend
-
+from scipy import stats
 
 def detrend_timeseries(timeseries):
     """
@@ -164,23 +164,35 @@ def create_composite(da,weak_years,strong_years):
     if len(weak_years)==0:
         raise(ValueError('Years to composite cannot be of 0 size'))
     da['time'] = da.time.dt.year
-    weak_years_composite = _average_composite(weak_years, da)
-    strong_years_composite = _average_composite(strong_years, da)
-    composite_difference = strong_years_composite - weak_years_composite
+    weak_years_composite_avg,weak_years_composite_std = _calc_composite_statistics(weak_years, da)
+    strong_years_composite_avg, strong_years_composite_std = _calc_composite_statistics(strong_years, da)
+    n1 = len(strong_years)
+    n2 = len(weak_years)
+    s_p = np.sqrt(((n1-1)*strong_years_composite_std**2-(n2-1)*weak_years_composite_std**2)/(n1+n2-2))
+
+    t_values=np.abs((strong_years_composite_avg-weak_years_composite_avg)/(s_p*np.sqrt(1/n1+1/n2)))
+    t_dist = stats.t.ppf(1-0.05/2, n1+n2-2)
+    significance_mask_005 = xr.where(t_values > t_dist, 1,0)
+    # t_values, p_values = ttest_ind(strong_years_composite_avg, weak_years_composite_avg)
+    composite_difference = strong_years_composite_avg - weak_years_composite_avg
+    significance_mask_005.attrs['long_name'] = 'Gridcell with significant change'
+    significance_mask_005.attrs['alpha']=0.05
     composite_difference.attrs = da.attrs
     composite_difference.attrs['weak_years']=weak_years
     composite_difference.attrs['strong_years']=strong_years
     
 
-    return composite_difference     
+    return composite_difference, significance_mask_005     
         
-def _average_composite(years_to_composite,data):
+def _calc_composite_statistics(years_to_composite,data):
     """averages the composite years"""
     if len(years_to_composite) ==1:
-        data = data.sel(time=years_to_composite)
+        mean = data.sel(time=years_to_composite)
+        std = 0
     else:
-        data = data.sel(time=years_to_composite).mean(dim='time',keep_attrs=True)
-    return data
+        std = data.sel(time=years_to_composite).std(dim='time',keep_attrs=True)
+        mean = data.sel(time=years_to_composite).mean(dim='time',keep_attrs=True)
+    return mean,std
 
 
 def calculate_climatology(data, start_year=None, end_year=None):

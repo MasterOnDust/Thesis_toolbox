@@ -56,7 +56,7 @@ def read_receptor_composite(locs,path, folder,size,season,region='total',kind='t
     ds.attrs['locations'] = list(locs)
     return ds
 
-def read_depostion_datasets(path,locs, kind,psize, frac=1):
+def read_depostion_datasets(path,locs, kind,psize,region='total', frac=1):
     """Read depostion dataset based on file structure from Master thesis workflow"""
     ds=xr.Dataset()
     if psize =='2micron':
@@ -66,7 +66,7 @@ def read_depostion_datasets(path,locs, kind,psize, frac=1):
     else:
         frac=frac
     for loc in locs:
-        temp_ds = xr.open_dataset(glob.glob(path+'results/model_results/{}/{}.{}.{}.*.nc'.format(kind,kind,loc,psize))[0])
+        temp_ds = xr.open_dataset(glob.glob(path+'{}/{}.{}.{}.{}.*.nc'.format(kind,kind,loc,region,psize))[0])
         # ds['{}_{}'.format(loc,kind)] = temp_ds[kind].where(temp_ds[kind]>0,drop=True)*frac
         ds['{}_{}'.format(loc,kind)] = temp_ds[kind]*frac
     ds.attrs['locations'] = list(locs)
