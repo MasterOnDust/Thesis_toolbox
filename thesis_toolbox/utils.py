@@ -3,6 +3,7 @@ import xarray as xr
 import glob
 from thesis_toolbox.composites.create_composites import detrend_timeseries,select_years_to_composite
 import numpy as np
+import os
 
 def get_locations_CLP():
     df = pd.DataFrame(index = ['SACOL', 'BADOE', 'LANTIAN','SHAPOTOU','YINCHUAN','LUOCHUAN'], columns=['lon','lat'])
@@ -50,13 +51,13 @@ def read_receptor_composite(locs,path, folder,size,season,region='total',kind='t
     
     ds=xr.Dataset()
     for loc in locs:
-        temp_ds = xr.open_dataset(glob.glob(path+'results/composites/{}/*.{}.{}.{}.{}.{}.{}.*.nc'.format(folder,kind,size,season,loc,region,std))[0])
+        temp_ds = xr.open_dataset(glob.glob(path+'results/composites/{}/*.composite.{}.{}.{}.{}.{}.{}.*.nc'.format(folder,kind,size,season,loc,region,std))[0])
         for ds_var in list(temp_ds.data_vars):
             ds['{}_{}'.format(loc,ds_var)] = temp_ds[ds_var]
     ds.attrs['locations'] = list(locs)
     return ds
 
-def read_depostion_datasets(path,locs, kind,psize,region='total', frac=1):
+def read_depostion_datasets(path,locs, kind,psize, frac=1):
     """Read depostion dataset based on file structure from Master thesis workflow"""
     ds=xr.Dataset()
     if psize =='2micron':
@@ -66,8 +67,8 @@ def read_depostion_datasets(path,locs, kind,psize,region='total', frac=1):
     else:
         frac=frac
     for loc in locs:
-        temp_ds = xr.open_dataset(glob.glob(path+'{}/{}.{}.{}.{}.*.nc'.format(kind,kind,loc,region,psize))[0])
-        # ds['{}_{}'.format(loc,kind)] = temp_ds[kind].where(temp_ds[kind]>0,drop=True)*frac
+        ncpath = path+'{}/{}.{}.{}.*.nc'.format(kind,kind,loc,psize)
+        temp_ds = xr.open_dataset(glob.glob(ncpath)[0])
         ds['{}_{}'.format(loc,kind)] = temp_ds[kind]*frac
     ds.attrs['locations'] = list(locs)
     return ds
@@ -111,3 +112,66 @@ def get_path_source_contribution(path0, years, kind, loc, psize):
     for year in years:
         paths += glob.glob(f'{path0}/{kind}/{psize}/{year}/*{loc}*.nc')
     return paths
+
+def load_MERRA2_seasonal(path0,location, psize='clay',date_tag='19990101-20201231', season='MAM'):
+    """
+    DESCRIPTION:
+    ===========
+        Reads the MERRA2 dust deposition data and resample it into seasonal sums
+
+    ARGUMENTS:
+    ==========
+        path0: Path to where FLEXPART output is stored.
+        location: Name of location, in the file name.
+        psize: The size bin to reading (in the file name).
+        date_tag: Tag showing the period that the MERRA2 data file covers (in the filename).
+        season: which season to select.
+
+    RETURNS:
+    ========
+        pandas.DataFrame : dataframe containing the seasonal sum of wet , dry and total deposition. 
+    """
+    out_ds = xr.Dataset()
+    sec_in_month=2592000
+    for merra_name,kind in zip(['M2TMNXADG_5_12_4_DUWT003','M2TMNXADG_5_12_4_DUDP003'],['wetdep','drydep']):
+        ds = xr.open_dataset(os.path.join(path0,f'{kind}.{psize}.{date_tag}.{location}.nc'))
+        ds = ds.rename({merra_name:kind})
+        
+        ds = ds.drop('datamonth')
+        ds=ds.resample(time='Q-NOV').sum(keep_attrs=True)
+        ds=ds.sel(time=(ds.time.dt.season==season))
+        out_ds[f'{kind} {location}'] = ds[kind]*1000*sec_in_month*3
+    df = out_ds.to_dataframe()
+
+    df[f'total {location}'] = df[f'drydep {location}'] + df[f'wetdep {location}']
+
+    return df
+
+def create_deposition_timeseries_MERRA2(ds,lon0, lat0,kind='total', sizebins=None):
+    """Creatre deposition/emission timeseries from gridded merra 2 data"""
+    if sizebins==None:
+        sizebins = ['001','002','003','004','005']
+    if kind == 'drydep':
+        datavars = ['DUDP' + sb for sb in sizebins]
+    elif kind == 'wetdep':
+        datavars = ['DUWT' + sb for sb in sizebins]
+    elif kind == 'emissions':
+        datavars = ['DUEM' + sb for sb in sizebins]
+    elif kind == 'total':
+        pass
+    else:
+        raise(ValueError(f'Kind is invalid {kind}'))
+    ds = ds.sel(lon=lon0,lat=lat0,method='nearest')
+    outval=0
+    if kind == 'total':
+        wetdep_vars = ['DUWT' + sb for sb in sizebins]
+        drydep_vars = ['DUDP' + sb for sb in sizebins]
+        total_dep = [ds[wd_var] + ds[dd_var] for wd_var, dd_var in zip(wetdep_vars, drydep_vars)]
+        
+        for val in total_dep:
+            outval += val
+    else:
+        for dvar in datavars:
+            outval += ds[dvar]
+    return outval
+        
