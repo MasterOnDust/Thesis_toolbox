@@ -163,13 +163,13 @@ def create_composite(da,weak_years,strong_years):
     
     if len(weak_years)==0:
         raise(ValueError('Years to composite cannot be of 0 size'))
-    da['time'] = da.time.dt.year
+    da = da.assign_coords(time=da.time.dt.year)
     weak_years_composite_avg,weak_years_composite_std = _calc_composite_statistics(weak_years, da)
     strong_years_composite_avg, strong_years_composite_std = _calc_composite_statistics(strong_years, da)
     n1 = len(strong_years)
     n2 = len(weak_years)
     s_p = np.sqrt(((n1-1)*strong_years_composite_std**2-(n2-1)*weak_years_composite_std**2)/(n1+n2-2))
-
+    s_p = xr.where(s_p>0, s_p, np.nan)
     t_values=np.abs((strong_years_composite_avg-weak_years_composite_avg)/(s_p*np.sqrt(1/n1+1/n2)))
     t_dist = stats.t.ppf(1-0.05/2, n1+n2-2)
     significance_mask_005 = xr.where(t_values > t_dist, 1,0)

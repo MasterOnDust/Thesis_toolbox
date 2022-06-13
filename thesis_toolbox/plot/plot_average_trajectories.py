@@ -1,16 +1,23 @@
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from DUST.plot.maps import map_terrain_china, map_china
+from dust.plot.maps import map_terrain_china, map_china
 from thesis_toolbox.plot.trajectory_plotting import plot_center_spread_trajectory
 from thesis_toolbox.utils import get_locations_CLP
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib
+import pandas as pd
 
 def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None, 
-                                        add_colorbar=True,add_letters=True):
-    locs = get_locations_CLP().index
-    colors = ['tab:blue', 'tab:orange','tab:green','tab:red','tab:purple','tab:brown','tab:pink','tab:gray','tab:olive','tab:cyan']
+                                        add_colorbar=True,add_letters=True, locs=None, colors=None):
+    if isinstance(locs, pd.core.indexes.base.Index) or isinstance(locs, type([])) or isinstance(locs, np.ndarray):
+        locs = locs
+    else:
+        locs = get_locations_CLP().index
+    if colors:
+        colors=colors
+    else:
+        colors = ['tab:blue', 'tab:orange','tab:green','tab:red','tab:purple','tab:brown','tab:pink','tab:gray','tab:olive','tab:cyan']
     if axes == None:
         fig,(ax,ax1) = plt.subplots(ncols=2,subplot_kw={'projection':ccrs.PlateCarree()}, figsize=(12,5))
     else:
@@ -40,8 +47,11 @@ def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None,
 
 
 def plot_trajectory_height_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None, 
-                                    add_letters=True, btime_limit=72):
-    locs = get_locations_CLP().index
+                                    add_letters=True, btime_limit=72, locs=None, colors=None):
+    if isinstance(locs, pd.core.indexes.base.Index) or isinstance(locs, type([])) or isinstance(locs, np.ndarray):
+        locs = locs
+    else:
+        locs = get_locations_CLP().index
     if axes == None:
         fig,(ax,ax1) = plt.subplots(ncols=2,subplot_kw={'projection':ccrs.PlateCarree()}, figsize=(12,5))
     else:
@@ -53,16 +63,22 @@ def plot_trajectory_height_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=N
         height = np.average(height,weights=ds[kind],axis=1)
         time = np.abs(ds.btime/3600)
         ax.set_xticks(np.arange(0,btime_limit+12,12))
-        ax.plot(time , height, label=location)
-        
+        if colors:
+            ax.plot(time , height, label=location, color=colors[i])
+        else:
+            ax.plot(time , height, label=location)
+
     for i,location in enumerate(locs):
         ds = dsets[f'dust_loading_traj_{kind}_20micron_{location}'].sel(btime=slice(0,-btime_limit*3600))
         height = ds.height - ds.mean_topo
         height = np.average(height,weights=ds[kind],axis=1)
         ax1.set_xticks(np.arange(0,btime_limit+12,12))
         time = np.abs(ds.btime/3600)
-        ax1.plot(time , height, label=location)
-    
+        
+        if colors:
+            ax1.plot(time , height, label=location, color=colors[i])
+        else:
+            ax1.plot(time , height, label=location)
     
     if add_letters:
         add_letter(np.array((ax,ax1)),y=0.87)

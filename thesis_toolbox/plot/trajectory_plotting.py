@@ -2,7 +2,7 @@ from fpcluster import get_distance_circles
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from fpcluster.adaptive_kmeans import center_of_mass_trajectory
-from DUST.plot.maps import map_terrain_china, map_china
+from dust.plot.maps import map_terrain_china, map_china
 import numpy as np
 import cartopy.crs as ccrs
 import fpcluster as fc

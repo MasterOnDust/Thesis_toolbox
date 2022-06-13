@@ -4,19 +4,21 @@ import cartopy.crs as ccrs
 import glob
 from thesis_toolbox.utils import get_locations_CLP
 from thesis_toolbox.plot.tools import add_letter
-from DUST.plot.plotting import mpl_base_map_plot_xr,plot_log_anomaly
-from DUST.plot.maps import map_terrain_china, map_china
-from DUST.plot.utils import _gen_flexpart_colormap,_add_colorbar
+from dust.plot.plotting import mpl_base_map_plot_xr,plot_log_anomaly
+from dust.plot.maps import map_terrain_china, map_china
+from dust.plot.utils import _gen_flexpart_colormap,_add_colorbar
 from matplotlib.colors import LogNorm
 import numpy as np
 
 
-def depositon_facet_plot( total_depo,wet_depo,dry_depo,ylabel_bar_plot=None,ylim=None,
-                        figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, **mesh_kwargs):
+def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot=None,ylim=None,
+                        figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, ax = None, **mesh_kwargs):
     locations_df = get_locations_CLP()
     
-    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
+    if isinstance(ax, np.ndarray) == False:
+        fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
     
+
     plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
@@ -31,10 +33,12 @@ def depositon_facet_plot( total_depo,wet_depo,dry_depo,ylabel_bar_plot=None,ylim
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
         if i in (1,3,5):
             axes[i].yaxis.set_ticklabels([])
-    ax1 = fig.add_subplot(4,2,8)
-    ax[3,1] = ax1
-    add_letter(ax,y=0.87)
-    deposition_bar_plot(wet_depo,dry_depo, y_axis_label=ylabel_bar_plot,ax=ax1,ylim=ylim)
+    if wet_depo and dry_depo:
+    
+        ax1 = fig.add_subplot(4,2,8)
+        ax[3,1] = ax1
+        add_letter(ax,y=0.87)
+        deposition_bar_plot(wet_depo,dry_depo, y_axis_label=ylabel_bar_plot,ax=ax1,ylim=ylim)
 
 
 def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,vmax,figsize=(8.3,11.7),

@@ -6,12 +6,12 @@ import xarray as xr
 
 
 def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0.9, receptor_loc=None
-                            ,receptor_name=None,vector_scale=1, angles='xy',hatches='xx', hatch_color='gray'):
+                            ,receptor_name=None,vector_scale=1, angles='xy',hatches='xx', hatch_color='gray', 
+                            forcing='era5', q_density=22):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax)
     extent = ax.get_extent()
-    ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
     if receptor_name and isinstance(receptor_name,str):
         Z = receptor_name+'_Z'
         u = receptor_name+'_u'
@@ -22,6 +22,15 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
         u = 'u'
         v = 'v'
         hws = 'hws'
+
+    if forcing == 'merra2':
+        ds = ds.sel(lon=slice(extent[0],extent[1]),lat=slice(extent[2],extent[3]))
+        lon = 'lon'
+        lat = 'lat'
+    else:
+        ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
+        lon = 'longitude'
+        lat = 'latitude'
     im = ds[hws].plot.contourf(transform=ccrs.PlateCarree(),  levels= np.linspace(-7.5,7.5,16),
                                                     cmap='bwr', add_colorbar=False, ax=ax)
     CS = ds[Z].plot.contour(transform=ccrs.PlateCarree(), ax=ax,colors='black', linewidths=1, 
@@ -34,8 +43,8 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
         collection.set_edgecolor(hatch_color)
         collection.set_linewidth(0.)
 
-    Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
-                   ds[v][::22,::22],transform=ccrs.PlateCarree(),color='saddlebrown', 
+    Q = ax.quiver(ds[lon][::q_density], ds[lat][::q_density], ds[u][::q_density,::q_density], 
+                   ds[v][::q_density,::q_density],transform=ccrs.PlateCarree(),color='saddlebrown', 
               units='xy', zorder=1002, minlength=2, pivot='middle', scale=vector_scale,angles=angles)
     # ax.clabel(CS, fmt='%d', colors='black', fontsize=12, inline=1, zorder=1030)
     qk=ax.quiverkey(Q, x_qk,y_qk, U=2, label='2 m/s', labelpos='E', coordinates='axes', color='black')
@@ -86,7 +95,8 @@ def plot_mslp_850hpa_composite(ds,
 oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master_thesis_UiO_workflow/downloads/ERA5_orography.nc' 
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
                                 receptor_name=None, vector_scale=1, angles='xy',U=2, q_label='',
-                                vmin=-6, vmax=6, significance_mask=True,hatches='xx', hatch_color='gray'):
+                                vmin=-6, vmax=6, significance_mask=True,hatches='xx', hatch_color='gray', forcing='era5',
+                                q_density=22):
     oro = xr.open_dataset(oro)
     oro = oro.sel(longitude=slice(69,105), latitude=slice(40,27)).isel(time=0)
     if receptor_name and isinstance(receptor_name,str):
@@ -101,7 +111,14 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
         ax = plt.gca()
     map_large_scale(ax)
     extent = ax.get_extent()
-    ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
+    if forcing == 'merra2':
+        ds = ds.sel(lon=slice(extent[0],extent[1]),lat=slice(extent[2],extent[3]))
+        lon = 'lon'
+        lat = 'lat'
+    else:
+        ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
+        lon = 'longitude'
+        lat = 'latitude'
     im = ds[msl].plot.contourf(transform=ccrs.PlateCarree(),levels=16, vmin=vmin, vmax=vmax,
                                                                cmap='bwr', add_colorbar=False, ax=ax)
     if significance_mask:
@@ -113,8 +130,8 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     # cs.collections[0].set_edgecolor('gainsboro')
     if q_label == '':
         q_label = f'{U} m/s'
-    Q = ax.quiver(ds.longitude[::22], ds.latitude[::22], ds[u][::22,::22], 
-                   ds[v][::22,::22],transform=ccrs.PlateCarree(),color='saddlebrown', 
+    Q = ax.quiver(ds[lon][::q_density], ds[lat][::q_density], ds[u][::q_density,::q_density], 
+                   ds[v][::q_density,::q_density],transform=ccrs.PlateCarree(),color='saddlebrown', 
               units='xy', zorder=1002, minlength=2, pivot='middle', scale=vector_scale, angles = angles)
     qk=ax.quiverkey(Q, x_qk,y_qk, U=U, label=q_label, labelpos='E', coordinates='axes', color='black')
     qk.text.set_backgroundcolor('w')
