@@ -2,6 +2,7 @@ import xarray as xr
 import dust
 from netCDF4 import num2date, date2num
 import numpy as np
+import dust
 
 def create_timeseries(path, lon0=None,lon1=None,lat0=None,lat1=None):
     ds = xr.open_dataset(path)
