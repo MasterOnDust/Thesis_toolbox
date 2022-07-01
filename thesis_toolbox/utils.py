@@ -67,7 +67,9 @@ def read_depostion_datasets(path,locs, kind,psize, frac=1):
     else:
         frac=frac
     for loc in locs:
+        
         ncpath = path+'{}/{}.{}.{}.*.nc'.format(kind,kind,loc,psize)
+        print(glob.glob(ncpath))
         temp_ds = xr.open_dataset(glob.glob(ncpath)[0])
         ds['{}_{}'.format(loc,kind)] = temp_ds[kind]*frac
     ds.attrs['locations'] = list(locs)
