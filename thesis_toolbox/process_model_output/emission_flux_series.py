@@ -1,3 +1,4 @@
+from IPython.terminal.embed import embed
 import xarray as xr
 import dust
 from netCDF4 import num2date, date2num
@@ -76,7 +77,11 @@ def resample_emission_flux(paths, lon0=None,lon1=None,
             resampled_ds=resampled_ds.assign(time_bnds=time_bnds)
             dsets.append(resampled_ds)
         else:
-            resampled_ds=temp_ds.cum_emission.to_dataset(name='Emission')
+            
+            if 'time' not in temp_ds.cum_emission.dims:
+                resampled_ds=temp_ds.cum_emission.to_dataset(name='Emission')
+            else:
+                resampled_ds=temp_ds.cum_emission.isel(time=0).to_dataset(name='Emission')
             resampled_ds['Emission'].attrs['cell_methods']='time: summed'
             resampled_ds['Emission'].attrs['units']='kg/m2'
             resampled_ds['Emission'].attrs['long_name']='yearly accumulated simulated dust emissions'
@@ -104,6 +109,7 @@ def resample_emission_flux(paths, lon0=None,lon1=None,
             resampled_ds=resampled_ds.assign(time_bnds=time_bnds)
             resampled_ds.time.attrs=time.attrs
             dsets.append(resampled_ds)
+    
     ds=xr.concat(dsets, dim='time',data_vars=['Emission','time_bnds'],combine_attrs='override')
     ds=ds.assign(cum_emission=ds.Emission.sum(dim='time', keep_attrs=True))
     ds['cum_emission'].attrs['units']='kg/m2'
