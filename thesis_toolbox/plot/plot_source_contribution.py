@@ -12,7 +12,8 @@ import numpy as np
 
 
 def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot=None,ylim=None,
-                        figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, ax = None, **mesh_kwargs):
+                        figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, ax = None,
+                        no_tick_labels=False, title=True, **mesh_kwargs):
     locations_df = get_locations_CLP()
     
     if isinstance(ax, np.ndarray) == False:
@@ -28,10 +29,15 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
             loc_name = 'BAODE'
         else:
             loc_name = total_depo.locations[i]
-        axes[i].set_title(loc_name, fontsize=fontsize_title)
+        if title:
+            axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
-        if i in (1,3,5):
+        if no_tick_labels:
+            axes[i].yaxis.set_ticklabels([])
+            axes[i].xaxis.set_ticklabels([])
+
+        elif i in (1,3,5):
             axes[i].yaxis.set_ticklabels([])
     if wet_depo and dry_depo:
     
@@ -41,15 +47,16 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
         deposition_bar_plot(wet_depo,dry_depo, y_axis_label=ylabel_bar_plot,ax=ax1,ylim=ylim)
 
 
-def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,vmax,figsize=(8.3,11.7),
-                                lower_bound=-5e-8,upper_bound=5e-8,fontsize_title=14,hspace=0.5,wspace=None,
+def composite_depositon_facet_plot(total_depo,lin_tresh,vmin,vmax,wet_depo=None,dry_depo=None,ax=None,figsize=(8.3,11.7),
+                                lower_bound=-5e-8,upper_bound=5e-8,fontsize_title=14,hspace=0.5,wspace=None, add_site_name=True,
+                                no_tick_labels=False,
                                 **mesh_kwargs):
     locations_df = get_locations_CLP()
 
+    if isinstance(ax, np.ndarray) == False:
+        fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
     
-    fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
-    
-    plt.subplots_adjust(hspace=hspace, wspace=wspace)
+    # plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
@@ -58,16 +65,23 @@ def composite_depositon_facet_plot(total_depo,wet_depo,dry_depo,lin_tresh,vmin,v
             loc_name = 'BAODE'
         else:
             loc_name = total_depo.locations[i]
-        axes[i].set_title(loc_name, fontsize=fontsize_title)
+        if add_site_name:
+            axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
-        if i in (1,3,5):
+        if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
-    ax1 = fig.add_subplot(4,2,8)
-    ax[3,1] = ax1
-    add_letter(ax,y=0.87)
-    deposition_bar_plot(wet_depo,dry_depo,  ax=ax1,
-    y_axis_label='Deposition rate [$\mathrm{g/m}^2$] \n (Strong years - weak yeak)')
+            axes[i].xaxis.set_ticklabels([])
+        
+        elif i in (1,3,5):
+            axes[i].yaxis.set_ticklabels([])
+    if wet_depo and dry_depo:        
+        ax1 = fig.add_subplot(4,2,8)
+        ax[3,1] = ax1
+        add_letter(ax,y=0.87)
+
+        deposition_bar_plot(wet_depo,dry_depo,  ax=ax1,
+        y_axis_label='Deposition rate [$\mathrm{g/m}^2$] \n (Strong years - weak yeak)')
 
 def deposition_bar_plot(wet_dep,dry_dep,ax=None, y_axis_label=None, ylim=None):
     if ax == None:

@@ -4,11 +4,12 @@ import glob
 from thesis_toolbox.composites.create_composites import detrend_timeseries,select_years_to_composite
 import numpy as np
 import os
+import scipy.stats as scistat
 
 def get_locations_CLP():
     df = pd.DataFrame(index = ['SACOL', 'BADOE', 'LANTIAN','SHAPOTOU','YINCHUAN','LUOCHUAN'], columns=['lon','lat'])
     df.loc['SACOL',:] = (104.1370,35.96400)
-    df.loc['BADOE',:] = (111.1700,39.00300)
+    df.loc['BAODE',:] = (111.1700,39.00300)
     df.loc['LANTIAN',:] = (109.2560,34.180)
     df.loc['LINGTAI',:] = (107.789,35.710)
     df.loc['SHAPOTOU',:] = (105.0475,37.749)
@@ -43,6 +44,8 @@ def extract_source_region(region):
         return 80, 90, 43, 47
     elif region == 'quaidam_basin':
         return 90, 100, 35, 40
+    elif region == 'central_asia':
+        return 56,73,26,47
     else:
         raise(ValueError(f'{region} is not defined'))
 
@@ -69,7 +72,6 @@ def read_depostion_datasets(path,locs, kind,psize, frac=1):
     for loc in locs:
         
         ncpath = path+'{}/{}.{}.{}.*.nc'.format(kind,kind,loc,psize)
-        print(glob.glob(ncpath))
         temp_ds = xr.open_dataset(glob.glob(ncpath)[0])
         ds['{}_{}'.format(loc,kind)] = temp_ds[kind]*frac
     ds.attrs['locations'] = list(locs)
@@ -94,9 +96,13 @@ def source_contrib_composite_difference(path, locs,kind, psize,frac=1, norm=True
         strong_depo_year = xr.open_dataset(ds_path).sel(year=strong_years).mean(dim='year')
         if norm:
             weak_depo_year[kind] = weak_depo_year[kind]/(weak_depo_year[kind].sum(dim=['lon','lat']))
+            # weak_depo_year[kind] = (weak_depo_year[kind] - weak_depo_year[kind].min())/(weak_depo_year[kind].max()-weak_depo_year[kind].min())
+            # strong_depo_year[kind] = (strong_depo_year[kind]- strong_depo_year[kind].min())/(strong_depo_year[kind].max()-strong_depo_year[kind].min())
             strong_depo_year[kind] = strong_depo_year[kind]/(strong_depo_year[kind].sum(dim=['lon','lat']))
         varName = '{}_{}'.format(loc,kind)
         ds[varName] = (strong_depo_year[kind]-weak_depo_year[kind])*frac
+        ds[varName].attrs['weak_years'] = weak_years
+        ds[varName].attrs['strong_years'] = strong_years
     ds.attrs['locations'] = list(locs)
     return ds
 
@@ -115,7 +121,8 @@ def get_path_source_contribution(path0, years, kind, loc, psize):
         paths += glob.glob(f'{path0}/{kind}/{psize}/{year}/*{loc}*.nc')
     return paths
 
-def load_MERRA2_seasonal(path0,location, psize='clay',date_tag='19990101-20201231', season='MAM'):
+def load_MERRA2_seasonal(path0,location, psize='clay',date_tag='19990101-20201231', season='MAM',
+                        wetdep_field='M2TMNXADG_5_12_4_DUWT003',drydep_field='M2TMNXADG_5_12_4_DUDP003'):
     """
     DESCRIPTION:
     ===========
@@ -135,7 +142,8 @@ def load_MERRA2_seasonal(path0,location, psize='clay',date_tag='19990101-2020123
     """
     out_ds = xr.Dataset()
     sec_in_month=2592000
-    for merra_name,kind in zip(['M2TMNXADG_5_12_4_DUWT003','M2TMNXADG_5_12_4_DUDP003'],['wetdep','drydep']):
+    depo_fields = [wetdep_field, drydep_field]
+    for merra_name,kind in zip(depo_fields,['wetdep','drydep']):
         ds = xr.open_dataset(os.path.join(path0,f'{kind}.{psize}.{date_tag}.{location}.nc'))
         ds = ds.rename({merra_name:kind})
         
@@ -148,6 +156,31 @@ def load_MERRA2_seasonal(path0,location, psize='clay',date_tag='19990101-2020123
     df[f'total {location}'] = df[f'drydep {location}'] + df[f'wetdep {location}']
 
     return df
+
+def calc_spatial_correlations(da: xr.DataArray, ts, corr_dim='time'):
+    """
+    Description:
+    ===========
+        Calculates spatial correlation and associated p-values.
+    
+    """
+    if isinstance(ts,pd.Series):
+        ts = xr.DataArray(ts, dims='time')
+    
+    if corr_dim=='time':
+        da = da.assign_coords(time=ts.time)
+    
+    r=xr.corr(da,ts, dim=corr_dim)
+    
+    o_da = xr.zeros_like(r)
+    n = len(da.time)
+#     t = (r*(n-2))/np.sqrt(1-r**2)
+    dist =scistat.beta(n/2 - 1, n/2 - 1, loc=-1, scale=2)
+    p = dist.cdf(-np.abs(r))*2
+    o_da.data=p
+    
+    return r, o_da
+
 
 def create_deposition_timeseries_MERRA2(ds,lon0, lat0,kind='total', sizebins=None):
     """Creatre deposition/emission timeseries from gridded merra 2 data"""

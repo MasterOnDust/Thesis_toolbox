@@ -66,10 +66,10 @@ def select_years_according_to_rank(timeseries, c):
 
     elif isinstance(timeseries, pd.core.series.Series):
         if not isinstance(timeseries.index, pd.DatetimeIndex):
-            sorted_indices = timeseries.values.argsort()
-            weak_years = timeseries.iloc[sorted_indices[:c]].index.values
-            sorted_indices = timeseries.values.argsort()
-            strong_years = timeseries.iloc[sorted_indices[sorted_indices[-c:]]].index.values 
+            sorted_indices = timeseries.sort_values().index
+            weak_years = timeseries.loc[sorted_indices[:c]].index.values
+            sorted_indices = timeseries.sort_values().index
+            strong_years = timeseries.loc[sorted_indices[-c:]].index.values 
         else:
             raise(NotImplementedError('Not implemented yet, but will be if i find a use'))
     else:
@@ -172,7 +172,8 @@ def create_composite(da,weak_years,strong_years):
     s_p = xr.where(s_p>0, s_p, np.nan)
     t_values=np.abs((strong_years_composite_avg-weak_years_composite_avg)/(s_p*np.sqrt(1/n1+1/n2)))
     t_dist = stats.t.ppf(1-0.05/2, n1+n2-2)
-    significance_mask_005 = xr.where(t_values > t_dist, 1,0)
+       
+    significance_mask_005 = (t_values > t_dist).astype(int)
     # t_values, p_values = ttest_ind(strong_years_composite_avg, weak_years_composite_avg)
     composite_difference = strong_years_composite_avg - weak_years_composite_avg
     significance_mask_005.attrs['long_name'] = 'Gridcell with significant change'
@@ -180,9 +181,8 @@ def create_composite(da,weak_years,strong_years):
     composite_difference.attrs = da.attrs
     composite_difference.attrs['weak_years']=weak_years
     composite_difference.attrs['strong_years']=strong_years
+    return composite_difference, significance_mask_005  
     
-
-    return composite_difference, significance_mask_005     
         
 def _calc_composite_statistics(years_to_composite,data):
     """averages the composite years"""

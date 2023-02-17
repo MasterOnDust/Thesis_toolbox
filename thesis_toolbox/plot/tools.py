@@ -8,10 +8,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 import numpy as np
 
-def map_large_scale(ax):
-    ax.set_extent([20,180,0,90], crs=ccrs.PlateCarree())
-    ax.set_xticks([20,40,60,80,100,120,140,160,180], crs=ccrs.PlateCarree())
-    ax.set_yticks([0,30,60,90], crs=ccrs.PlateCarree())
+def map_large_scale(ax, extent=[20,180,0,90], xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    ax.set_xticks(xticks, crs=ccrs.PlateCarree())
+    ax.set_yticks(yticks, crs=ccrs.PlateCarree())
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
     ax.xaxis.set_major_formatter(lon_formatter)
@@ -19,7 +19,7 @@ def map_large_scale(ax):
 #     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_minor_locator(  AutoMinorLocator(3))
     ax.xaxis.set_minor_locator(  AutoMinorLocator(2))
-    ax.coastlines()
+    ax.coastlines(zorder=1100)
     
     
 class OOMFormatter(matplotlib.ticker.ScalarFormatter):

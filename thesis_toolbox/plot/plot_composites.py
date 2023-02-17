@@ -7,10 +7,10 @@ import xarray as xr
 
 def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0.9, receptor_loc=None
                             ,receptor_name=None,vector_scale=1, angles='xy',hatches='xx', hatch_color='gray', 
-                            forcing='era5', q_density=22):
+                            forcing='era5', q_density=22,xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
     if ax==None:
         ax = plt.gca()
-    map_large_scale(ax)
+    map_large_scale(ax, xticks = xticks, yticks= yticks)
     extent = ax.get_extent()
     if receptor_name and isinstance(receptor_name,str):
         Z = receptor_name+'_Z'
@@ -58,14 +58,17 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
         ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
 
 def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None,  x_qk=0.93, y_qk=0.9,
-                            receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6,hatches='xx', hatch_color='gray'):
+                            receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6,hatches='xx', hatch_color='gray',
+                            xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
     if ax==None:
         ax = plt.gca()
-    map_large_scale(ax)
+    map_large_scale(ax, xticks = xticks, yticks= yticks)
+
     extent = ax.get_extent()
     ds = ds.sel(longitude=slice(extent[0],extent[1]),latitude=slice(extent[3],extent[2]))
     if receptor_name and isinstance(receptor_name,str):
         Z = receptor_name+'_Z'
+
         hws = receptor_name+'_hws'
     else:
         Z='Z'
@@ -96,7 +99,10 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
                                 receptor_name=None, vector_scale=1, angles='xy',U=2, q_label='',
                                 vmin=-6, vmax=6, significance_mask=True,hatches='xx', hatch_color='gray', forcing='era5',
-                                q_density=22):
+                                q_density=22, xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
+    if ax==None:
+        ax = plt.gca()
+    map_large_scale(ax, xticks = xticks, yticks= yticks)
     oro = xr.open_dataset(oro)
     oro = oro.sel(longitude=slice(69,105), latitude=slice(40,27)).isel(time=0)
     if receptor_name and isinstance(receptor_name,str):
@@ -107,9 +113,6 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
         msl='msl'
         u = 'u'
         v = 'v'
-    if ax==None:
-        ax = plt.gca()
-    map_large_scale(ax)
     extent = ax.get_extent()
     if forcing == 'merra2':
         ds = ds.sel(lon=slice(extent[0],extent[1]),lat=slice(extent[2],extent[3]))
