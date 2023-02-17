@@ -12,7 +12,7 @@ def get_total_depostion(drydep, wetdep):
     ds_tot.attrs.pop('filename',None)
 
     ds_tot.attrs['varName'] = 'total_deposition'
-    ds_tot['RELLAT']=drydep['RELLAT']
-    ds_tot['RELLNG']=drydep['RELLNG']
+    ds_tot['RELLAT1']=drydep['RELLAT1']
+    ds_tot['RELLNG1']=drydep['RELLNG1']
     
     return ds_tot
