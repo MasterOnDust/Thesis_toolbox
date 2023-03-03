@@ -7,14 +7,15 @@ import os
 import scipy.stats as scistat
 
 def get_locations_CLP():
-    df = pd.DataFrame(index = ['SACOL', 'BADOE', 'LANTIAN','SHAPOTOU','YINCHUAN','LUOCHUAN'], columns=['lon','lat'])
-    df.loc['SACOL',:] = (104.1370,35.96400)
-    df.loc['BAODE',:] = (111.1700,39.00300)
-    df.loc['LANTIAN',:] = (109.2560,34.180)
-    df.loc['LINGTAI',:] = (107.789,35.710)
-    df.loc['SHAPOTOU',:] = (105.0475,37.749)
-    df.loc['YINCHUAN',:] = (106.101,38.50)
-    df.loc['LUOCHUAN',:] = (109.424,35.710)
+    df = pd.DataFrame(index = ['SHAPOTOU','SACOL', 'BADOE', 'LUOCHUAN','LINGTAI','LANTIAN','ULANTATAL','YINCHUAN'], columns=['lon','lat', 'color'])
+    df.loc['SACOL',:] = (104.1370,35.96400, "#5790fc")
+    df.loc['BAODE',:] = (111.1700,39.00300, "#f89c20")
+    df.loc['LANTIAN',:] = (109.2560,34.180, "#c41020")
+    df.loc['LINGTAI',:] = (107.789,35.710, "#ba5bac")
+    df.loc['SHAPOTOU',:] = (105.0475,37.749, "#6c16cc")
+    df.loc['YINCHUAN',:] = (106.101,38.50, "#121112")
+    df.loc['LUOCHUAN',:] = (109.424,35.710,"#9c9ca1")
+    df.loc['ULANTATAL',:] = (105.53,39.18, "#121112")
     return df
 
 def extract_source_region(region):
