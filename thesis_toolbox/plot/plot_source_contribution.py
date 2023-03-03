@@ -25,14 +25,11 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
     for i,dvar in enumerate(total_depo.data_vars):
         map_terrain_china(axes[i])
         mpl_base_map_plot_xr(total_depo[dvar], ax=axes[i], extend='max', **mesh_kwargs)
-        if total_depo.locations[i] == 'BADOE':
-            loc_name = 'BAODE'
-        else:
-            loc_name = total_depo.locations[i]
+        loc_name = total_depo.locations[i]
         if title:
             axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
-                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color=locations_df.loc[total_depo.locations[i],:][2], zorder=1300, edgecolors='black', s=4)
         if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
             axes[i].xaxis.set_ticklabels([])
