@@ -30,7 +30,7 @@ def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', c
                                   p0=[ds.lon0,ds.lat0],ax=ax, receptor_marker_color=receptor_marker_color, 
                                   scatter_kwargs=scatter_kwargs)
     if add_trajectory_marks:
-        ax.scatter(xcenter[::4][1:],ycenter[::4][1:],  marker=trajectory_marker, color=color_markers, zorder=2000,s=mark_size)
+        ax.scatter(xcenter[::4][1:],ycenter[::4][1:],  marker=trajectory_marker, color=color_markers, zorder=2000,s=mark_size, edgecolors='black')
     if plot_spread:
         
         geoms = get_distance_circles(ds.lons,ds.lats,xcenter, ycenter, method=method, weight=weights)
