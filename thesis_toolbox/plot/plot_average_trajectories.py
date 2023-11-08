@@ -28,7 +28,8 @@ def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None,
         ds = dsets[f'dust_loading_traj_{kind}_2micron_{location}']
         plot_center_spread_trajectory(ds, ax =ax,mapping='none',
                                      weights=ds[kind], plot_spread=False,vmin=vmin,vmax=vmax, 
-                                      add_trajectory_marks=True, mark_size=2, receptor_marker_color=colors[i])
+                                      add_trajectory_marks=True, mark_size=2, receptor_marker_color=colors[i],
+                                      )
     map_terrain_china(ax1)
     for i,location in enumerate(locs):
         ds = dsets[f'dust_loading_traj_{kind}_20micron_{location}']

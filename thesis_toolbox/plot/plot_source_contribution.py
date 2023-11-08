@@ -23,16 +23,16 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
     plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
+        axes[i].set_facecolor('white')
         map_terrain_china(axes[i])
         mpl_base_map_plot_xr(total_depo[dvar], ax=axes[i], extend='max', **mesh_kwargs)
-        if total_depo.locations[i] == 'BADOE':
-            loc_name = 'BAODE'
-        else:
-            loc_name = total_depo.locations[i]
+        loc_name = total_depo.locations[i]
         if title:
             axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
-                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+                        locations_df.loc[total_depo.locations[i],:][1],marker='*', 
+                        color=locations_df.loc[total_depo.locations[i],:][2], zorder=1300,  edgecolors='black',
+                        linewidth=1.1, s=110)
         if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
             axes[i].xaxis.set_ticklabels([])
@@ -49,18 +49,24 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
 
 def composite_depositon_facet_plot(total_depo,lin_tresh,vmin,vmax,wet_depo=None,dry_depo=None,ax=None,figsize=(8.3,11.7),
                                 lower_bound=-5e-8,upper_bound=5e-8,fontsize_title=14,hspace=0.5,wspace=None, add_site_name=True,
-                                no_tick_labels=False,
+                                   add_back_ground_map='std_map',
+                                no_tick_labels=False, cmap='bwr',
                                 **mesh_kwargs):
     locations_df = get_locations_CLP()
 
     if isinstance(ax, np.ndarray) == False:
         fig, ax = plt.subplots(nrows=4, ncols=2, figsize=figsize, subplot_kw={'projection':ccrs.PlateCarree()})
     
-    # plt.subplots_adjust(hspace=hspace, wspace=wspace)
+    plt.subplots_adjust(hspace=hspace, wspace=wspace)
     axes = ax.ravel()
     for i,dvar in enumerate(total_depo.data_vars):
-        map_terrain_china(axes[i])
-        plot_log_anomaly(total_depo[dvar], lin_tresh,vmin,vmax,ax=axes[i], cmap='bwr', lower_bound=lower_bound,upper_bound=upper_bound, **mesh_kwargs)
+        if add_back_ground_map == 'terrain':
+            map_terrain_china(axes[i])
+        elif add_back_ground_map == 'std_map':
+            map_china(axes[i])
+        else:
+            pass
+        plot_log_anomaly(total_depo[dvar], lin_tresh,vmin,vmax,ax=axes[i], cmap=cmap, lower_bound=lower_bound,upper_bound=upper_bound, **mesh_kwargs)
         if total_depo.locations[i] == 'BADOE':
             loc_name = 'BAODE'
         else:
@@ -68,7 +74,9 @@ def composite_depositon_facet_plot(total_depo,lin_tresh,vmin,vmax,wet_depo=None,
         if add_site_name:
             axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
-                        locations_df.loc[total_depo.locations[i],:][1],marker='*', color='black', zorder=1300)
+                        locations_df.loc[total_depo.locations[i],:][1],marker='*', 
+                        color=locations_df.loc[total_depo.locations[i],:][2], zorder=1300,  edgecolors='black',
+                        linewidth=1.1, s=110)
         if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
             axes[i].xaxis.set_ticklabels([])

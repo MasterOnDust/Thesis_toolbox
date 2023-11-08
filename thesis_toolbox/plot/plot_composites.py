@@ -7,7 +7,8 @@ import xarray as xr
 
 def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0.9, receptor_loc=None
                             ,receptor_name=None,vector_scale=1, angles='xy',hatches='xx', hatch_color='gray', 
-                            forcing='era5', q_density=22,xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
+                            forcing='era5', q_density=22,xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90],
+                            receptor_color='black'):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax, xticks = xticks, yticks= yticks)
@@ -55,7 +56,8 @@ def plot_500hPa_composite(ds,ax=None, label='', colorbar=True, x_qk=0.93, y_qk=0
     if colorbar:
         add_colorbar(im,im.levels, label='Composite difference 500hPa winds [m/s] \n  (strong years - weak years)')
     if receptor_loc and isinstance(receptor_loc,list):
-        ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*')
+                ax.scatter(receptor_loc[0], receptor_loc[1], color=receptor_color, marker='*', 
+                    zorder=2000, edgecolors='black',linewidth=1.05, s=110)
 
 def plot_200hPa_composite(ds,ax=None, label='', colorbar=True, receptor_loc=None,  x_qk=0.93, y_qk=0.9,
                             receptor_name=None,vector_scale=1, angles='xy',vmin=-6, vmax=6,hatches='xx', hatch_color='gray',
@@ -99,7 +101,8 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
                                 ,ax=None, x_qk=0.93, y_qk=0.9, label='', colorbar=True, title='', receptor_loc=None,
                                 receptor_name=None, vector_scale=1, angles='xy',U=2, q_label='',
                                 vmin=-6, vmax=6, significance_mask=True,hatches='xx', hatch_color='gray', forcing='era5',
-                                q_density=22, xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90]):
+                                q_density=22, xticks =[20,40,60,80,100,120,140,160,180], yticks=[0,30,60,90],
+                                receptor_color='black'):
     if ax==None:
         ax = plt.gca()
     map_large_scale(ax, xticks = xticks, yticks= yticks)
@@ -144,7 +147,8 @@ oro='/mnt/acam-ns2806k/ovewh/tracing_the_winds/Master_thesis_UiO_workflow/Master
     if colorbar:
         add_colorbar(im,im.levels, label='Mean Sea Level Pressure \n  (strong years - weak years)')
     if receptor_loc and isinstance(receptor_loc,list):
-        ax.scatter(receptor_loc[0], receptor_loc[1], color='black', marker='*', zorder=2000)
+        ax.scatter(receptor_loc[0], receptor_loc[1], color=receptor_color, marker='*', 
+                    zorder=2000, edgecolors='black',linewidth=1.05, s=110)
 
     ax.text( x=0.03,y=0.94, s=label, fontsize=14, transform=ax.transAxes)
     
