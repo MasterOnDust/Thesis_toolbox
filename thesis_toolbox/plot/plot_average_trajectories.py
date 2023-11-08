@@ -9,7 +9,8 @@ import matplotlib
 import pandas as pd
 
 def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None, 
-                                        add_colorbar=True,add_letters=True, locs=None, colors=None):
+                                        add_colorbar=True,add_letters=True, locs=None, colors=None
+                                         ,join_trajec_to_receptor=False):
     if isinstance(locs, pd.core.indexes.base.Index) or isinstance(locs, type([])) or isinstance(locs, np.ndarray):
         locs = locs
     else:
@@ -28,13 +29,15 @@ def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None,
         ds = dsets[f'dust_loading_traj_{kind}_2micron_{location}']
         plot_center_spread_trajectory(ds, ax =ax,mapping='none',
                                      weights=ds[kind], plot_spread=False,vmin=vmin,vmax=vmax, 
-                                      add_trajectory_marks=True, mark_size=2, receptor_marker_color=colors[i])
+                                      add_trajectory_marks=True, mark_size=2, receptor_marker_color=colors[i],
+                                      join_trajec_to_receptor=join_trajec_to_receptor)
     map_terrain_china(ax1)
     for i,location in enumerate(locs):
         ds = dsets[f'dust_loading_traj_{kind}_20micron_{location}']
         plot_center_spread_trajectory(ds, ax =ax1,mapping='none',
                                      weights=ds[kind], plot_spread=False,vmin=vmin,vmax=vmax, 
-                                      add_trajectory_marks=True, mark_size=2,receptor_marker_color=colors[i])
+                                      add_trajectory_marks=True, mark_size=2,receptor_marker_color=colors[i],
+                                     join_trajec_to_receptor=join_trajec_to_receptor)
         
     
     if add_letters:

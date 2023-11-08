@@ -10,11 +10,12 @@ from fpcluster.plot_trajectories import dist_from_center
 
 def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', color='red', method='std', plot_spread=True,
                                    add_trajectory_marks=False,mark_size=1,color_markers='#F01846',trajectory_marker='D',
-                                   alpha_spread=.5,receptor_marker_color=None, **kwargs):
+                                   alpha_spread=.5,receptor_marker_color=None, join_trajec_to_receptor=False,**kwargs):
     """
     plot center trajectory with spread, ds is a dataset containing the trajectories. 
     """
-    
+
+        
     xcenter,ycenter = center_of_mass_trajectory(ds.lons.values,ds.lats.values, weights=weights)
     
     
@@ -26,9 +27,10 @@ def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', c
         ax = plt.gca()
     
     fc.plot_trajectories.plot_center_trajectory(xcenter,ycenter, height=height,
-                                  p0=[ds.lon0,ds.lat0],ax=ax, receptor_marker_color=receptor_marker_color, **kwargs)
+                                  p0=[ds.lon0,ds.lat0],ax=ax, receptor_marker_color=receptor_marker_color,
+                                                join_trajec_to_receptor=join_trajec_to_receptor, **kwargs)
     if add_trajectory_marks:
-        ax.scatter(xcenter[::4][1:],ycenter[::4][1:],  marker=trajectory_marker, color=color_markers, zorder=2000,s=mark_size, edgecolors='black')
+        ax.scatter(xcenter[::4][1:],ycenter[::4][1:],  marker=trajectory_marker, color=color_markers, zorder=2000,s=mark_size)
     if plot_spread:
         
         geoms = get_distance_circles(ds.lons,ds.lats,xcenter, ycenter, method=method, weight=weights)
