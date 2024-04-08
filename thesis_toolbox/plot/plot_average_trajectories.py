@@ -10,7 +10,8 @@ import pandas as pd
 
 def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None, 
                                         add_colorbar=True,add_letters=True, locs=None, colors=None
-                                         ,join_trajec_to_receptor=False):
+                                         ,join_trajec_to_receptor=False,subtract_mean_topo=False, cmap=None, 
+                                         norm=None):
     if isinstance(locs, pd.core.indexes.base.Index) or isinstance(locs, type([])) or isinstance(locs, np.ndarray):
         locs = locs
     else:
@@ -30,14 +31,14 @@ def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None,
         plot_center_spread_trajectory(ds, ax =ax,mapping='none',
                                      weights=ds[kind], plot_spread=False,vmin=vmin,vmax=vmax, 
                                       add_trajectory_marks=True, mark_size=2, receptor_marker_color=colors[i],
-                                      join_trajec_to_receptor=join_trajec_to_receptor)
+                                      join_trajec_to_receptor=join_trajec_to_receptor, norm=norm,cmap=cmap)
     map_terrain_china(ax1)
     for i,location in enumerate(locs):
         ds = dsets[f'dust_loading_traj_{kind}_20micron_{location}']
         plot_center_spread_trajectory(ds, ax =ax1,mapping='none',
                                      weights=ds[kind], plot_spread=False,vmin=vmin,vmax=vmax, 
                                       add_trajectory_marks=True, mark_size=2,receptor_marker_color=colors[i],
-                                     join_trajec_to_receptor=join_trajec_to_receptor)
+                                     join_trajec_to_receptor=join_trajec_to_receptor,norm=norm,cmap=cmap)
         
     
     if add_letters:
@@ -45,12 +46,14 @@ def plot_trajectories_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None,
     if add_colorbar:
         fig = plt.gcf()
         cbar_ax = fig.add_axes([0.15,0.01, 0.7,0.07])
-        fig.colorbar(cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin=vmin,vmax=vmax)), 
+        if norm is None:
+            norm=matplotlib.colors.Normalize(vmin=vmin,vmax=vmax)
+        fig.colorbar(cm.ScalarMappable(norm=norm), 
                  label='Height above ground [m]',orientation='horizontal',cax=cbar_ax)
 
 
 def plot_trajectory_height_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=None, 
-                                    add_letters=True, btime_limit=72, locs=None, colors=None):
+                                    add_letters=True, btime_limit=72, locs=None, colors=None, subtract_mean_topo=False):
     if isinstance(locs, pd.core.indexes.base.Index) or isinstance(locs, type([])) or isinstance(locs, np.ndarray):
         locs = locs
     else:
@@ -62,7 +65,10 @@ def plot_trajectory_height_all_locs(dsets,kind='drydep',vmin=0,vmax=5000, axes=N
         ax1 = axes[1]
     for i,location in enumerate(locs):
         ds = dsets[f'dust_loading_traj_{kind}_2micron_{location}'].sel(btime=slice(0,-btime_limit*3600))
-        height = ds.height - ds.mean_topo
+        if subtract_mean_topo:
+            height = ds.height - ds.mean_topo
+        else:
+            height = ds.height
         height = np.average(height,weights=ds[kind],axis=1)
         time = np.abs(ds.btime/3600)
         ax.set_xticks(np.arange(0,btime_limit+12,12))
