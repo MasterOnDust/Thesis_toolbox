@@ -10,7 +10,9 @@ from fpcluster.plot_trajectories import dist_from_center
 
 def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', color='red', method='std', plot_spread=True,
                                    add_trajectory_marks=False,mark_size=1,color_markers='#F01846',trajectory_marker='D',
-                                   alpha_spread=.5,receptor_marker_color=None, join_trajec_to_receptor=False,**kwargs):
+                                   alpha_spread=.5,receptor_marker_color=None, 
+                                  join_trajec_to_receptor=False,subtract_mean_topo=False,norm=None,cmap=None,
+                                  **kwargs):
     """
     plot center trajectory with spread, ds is a dataset containing the trajectories. 
     """
@@ -18,9 +20,10 @@ def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', c
         
     xcenter,ycenter = center_of_mass_trajectory(ds.lons.values,ds.lats.values, weights=weights)
     
-    
-    height = np.average(ds.height.values-ds.mean_topo.values,weights=weights,axis=1)
-    
+    if subtract_mean_topo:
+        height = np.average(ds.height.values-ds.mean_topo.values,weights=weights,axis=1)
+    else:
+        height = np.average(ds.height.values,weights=weights,axis=1)
     
 
     if ax == None:
@@ -28,7 +31,7 @@ def plot_center_spread_trajectory(ds,weights=None, ax=None, mapping='terrain', c
     
     fc.plot_trajectories.plot_center_trajectory(xcenter,ycenter, height=height,
                                   p0=[ds.lon0,ds.lat0],ax=ax, receptor_marker_color=receptor_marker_color,
-                                                join_trajec_to_receptor=join_trajec_to_receptor, **kwargs)
+                                                join_trajec_to_receptor=join_trajec_to_receptor,cmap=cmap,norm=norm, **kwargs)
     if add_trajectory_marks:
         ax.scatter(xcenter[::4][1:],ycenter[::4][1:],  marker=trajectory_marker, color=color_markers, zorder=2000,s=mark_size)
     if plot_spread:
