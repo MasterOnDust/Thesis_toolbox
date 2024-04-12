@@ -13,7 +13,7 @@ import numpy as np
 
 def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot=None,ylim=None,
                         figsize=(8.3,11.7),fontsize_title=14,hspace=0.5,wspace=None, ax = None,
-                        no_tick_labels=False, title=True, **mesh_kwargs):
+                        no_tick_labels=False, title=True,display_norm_fact=False, **mesh_kwargs):
     locations_df = get_locations_CLP()
     
     if isinstance(ax, np.ndarray) == False:
@@ -27,12 +27,23 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
         map_terrain_china(axes[i])
         mpl_base_map_plot_xr(total_depo[dvar], ax=axes[i], extend='max', **mesh_kwargs)
         loc_name = total_depo.locations[i]
-        if title:
-            axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', 
-                        color=locations_df.loc[total_depo.locations[i],:][2], zorder=1300,  edgecolors='black',
+                        color=locations_df.loc[total_depo.locations[i],:]['color'], zorder=1300,  edgecolors='black',
                         linewidth=1.1, s=110)
+        if title:
+            axes[i].set_title(loc_name, fontsize=fontsize_title)
+
+        if display_norm_fact:
+            norm_fact = total_depo[dvar].attrs.get('norm_fact', np.nan)
+            textbox_props = {'facecolor': 'white', 'edgecolor': 'none', 'boxstyle': 'square,pad=0.3', 'alpha': 0.7}
+            axes[i].text(0.965, 0.035, f'{norm_fact:.3e} [g m-2]',
+                            fontsize=8,
+                            verticalalignment='bottom',
+                            horizontalalignment='right',
+                            transform=axes[i].transAxes,
+                        bbox=textbox_props)
+                            
         if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
             axes[i].xaxis.set_ticklabels([])
@@ -75,7 +86,7 @@ def composite_depositon_facet_plot(total_depo,lin_tresh,vmin,vmax,wet_depo=None,
             axes[i].set_title(loc_name, fontsize=fontsize_title)
         axes[i].scatter(locations_df.loc[total_depo.locations[i],:][0],
                         locations_df.loc[total_depo.locations[i],:][1],marker='*', 
-                        color=locations_df.loc[total_depo.locations[i],:][2], zorder=1300,  edgecolors='black',
+                        color=locations_df.loc[total_depo.locations[i],:]['color'], zorder=1300,  edgecolors='black',
                         linewidth=1.1, s=110)
         if no_tick_labels:
             axes[i].yaxis.set_ticklabels([])
