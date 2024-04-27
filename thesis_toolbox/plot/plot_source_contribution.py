@@ -37,7 +37,8 @@ def depositon_facet_plot( total_depo,wet_depo=None,dry_depo=None,ylabel_bar_plot
         if display_norm_fact:
             norm_fact = total_depo[dvar].attrs.get('norm_fact', np.nan)
             textbox_props = {'facecolor': 'white', 'edgecolor': 'none', 'boxstyle': 'square,pad=0.3', 'alpha': 0.7}
-            axes[i].text(0.965, 0.035, f'{norm_fact:.3e} [g m-2]',
+        
+            axes[i].text(0.965, 0.035, f'{norm_fact/1e-7:.2f}e-7 [g m-2]',
                             fontsize=8,
                             verticalalignment='bottom',
                             horizontalalignment='right',
